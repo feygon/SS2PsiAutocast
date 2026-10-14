@@ -3,6 +3,7 @@
     py build.py            build dist/psi_autocast.kpf only
     py build.py --package  also build dist/psi_autocast_v<version>.zip for release
     py build.py --install  also copy the .kpf and psi/*.cmd into the game (developer use)
+    py build.py --dev ...  include the dev/ tools (overload probe) in the .kpf; never for release
 
 The .kpf can only be replaced while the game is closed. The .cmd files can be
 copied at any time; the game reads them fresh on every keypress.
@@ -18,6 +19,7 @@ GAME_DIR = Path(r"D:\EpicLibrary\SystemShock225thAnniT5DFq")
 SAVE_DIR = Path.home() / "Saved Games" / "Nightdive Studios" / "System Shock 2 Remastered"
 PROJECT_DIR = Path(__file__).resolve().parent
 MOD_SOURCE = PROJECT_DIR / "mod"
+DEV_SOURCE = PROJECT_DIR / "dev"
 KEYS_SOURCE = PROJECT_DIR / "psi"
 DIST_DIR = PROJECT_DIR / "dist"
 KPF_PATH = DIST_DIR / "psi_autocast.kpf"
@@ -28,13 +30,15 @@ def mod_version():
     return json.loads((MOD_SOURCE / "modinfo.json").read_text())["version"]
 
 
-def build_kpf():
+def build_kpf(include_dev=False):
     DIST_DIR.mkdir(exist_ok=True)
+    sources = [MOD_SOURCE, DEV_SOURCE] if include_dev else [MOD_SOURCE]
     with zipfile.ZipFile(KPF_PATH, "w", zipfile.ZIP_DEFLATED) as kpf:
-        for file in sorted(MOD_SOURCE.rglob("*")):
-            if file.is_file():
-                kpf.write(file, file.relative_to(MOD_SOURCE).as_posix())
-    print(f"built {KPF_PATH.name}")
+        for source in sources:
+            for file in sorted(source.rglob("*")):
+                if file.is_file():
+                    kpf.write(file, file.relative_to(source).as_posix())
+    print(f"built {KPF_PATH.name}" + (" (with dev tools)" if include_dev else ""))
 
 
 def package_release():
@@ -79,9 +83,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--package", action="store_true", help="build the release zip")
     parser.add_argument("--install", action="store_true", help="copy the build and key files into the game")
+    parser.add_argument("--dev", action="store_true", help="include dev/ tools in the .kpf (never with --package)")
     args = parser.parse_args()
+    if args.dev and args.package:
+        parser.error("--dev builds must not be packaged for release")
 
-    build_kpf()
+    build_kpf(include_dev=args.dev)
     if args.package:
         package_release()
     return install() if args.install else 0
