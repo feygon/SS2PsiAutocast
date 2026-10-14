@@ -5,16 +5,21 @@
 // Results go to the console and kexengine.log as "[psi_probe]" lines.
 // The PSI increase is permanent in the current game: quicksave first and reload afterwards to undo it.
 
-// Overload successes are counted by a watcher on the player, which receives OverloadSuccess.
+// Overload successes are counted by subscribing to the remaster's player core, which forwards
+// the player's OverloadSuccess message to subscribers. (The player's four script slots are full,
+// so a script of our own can't be attached to it.)
 ND.psiProbeOverloads <- 0;
 
-class PsiOverloadWatch extends SqRootScript {
-	function OnOverloadSuccess() {
+class PsiOverloadCounter {
+	m_name = "PsiOverloadCounter";
+
+	function OnOverloadSuccess(message) {
 		ND.psiProbeOverloads++;
 	}
 }
 
-ND.Archetype("The Player", function(){ AddScript("PsiOverloadWatch"); });
+ND.psiProbeCounter <- PsiOverloadCounter();
+ND.g_PlayerCore.Subscribe(ND.psiProbeCounter, "OverloadSuccess");
 
 const PROBE_DRAW_MS = 800;    // first cast waits for the amp to come up
 const PROBE_SETTLE_MS = 2500; // after each release: let the cast finish before checking and casting again

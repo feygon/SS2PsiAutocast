@@ -78,7 +78,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - `Object.InheritsFrom` / `Object.Named` check archetypes
 - **New archetypes:** `ND.Archetype("Name", "ND", function(){ AddScript("Name"); })`, from the remaster's own `libs/archetype_system.nut`.
 - **The game's scripts** are inside `mods\sshock2ee.kpf` under `sq_scripts/`. `libs/` and `debug/` load in the order given by `squirrel.ini`; top-level `.nut` files load automatically.
-- **The remaster's player script** logs `OnOverloadSuccess` when the player gets an `OverloadSuccess` message. A second script added to `The Player` archetype (four script slots, `NDPlayer` uses one) can catch the same message. The dev probe does this.
+- **The remaster's player script** logs `OnOverloadSuccess` when the player gets an `OverloadSuccess` message. The player's four script slots are all taken, so a script of your own can't be added there. Instead, use `ND.g_PlayerCore.Subscribe(listener, "OverloadSuccess")` with a plain class instance that has an `OnOverloadSuccess(message)` method. The dev probe does this.
 - **Script compile errors** show up only in the console or log, at load time, as `[darkscript] kpf:/mods/…nut line = (N) column = (M) : error …`. A file that fails to compile defines nothing, so `summon_obj` for its objects fails silently. After a script change, run `condump` and search for `error`.
 - **`base` is a Squirrel keyword** (the parent class), so it can't be used as a variable name.
 
