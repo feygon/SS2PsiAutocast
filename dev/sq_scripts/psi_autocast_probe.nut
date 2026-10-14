@@ -41,10 +41,10 @@ class PsiProbe extends SqRootScript {
 	}
 
 	function RaisePsi() {
-		local base = Property.Get("Player", "BaseStatsDesc", "PSI");
-		Property.Set("Player", "BaseStatsDesc", "PSI", base + 1);
+		local oldPsi = Property.Get("Player", "BaseStatsDesc", "PSI");
+		Property.Set("Player", "BaseStatsDesc", "PSI", oldPsi + 1);
 		ShockGame.RecalcStats("Player");
-		Log("raised base PSI " + base + " -> " + (base + 1) + " - " + PsiSummary());
+		Log("raised base PSI " + oldPsi + " -> " + (oldPsi + 1) + " - " + PsiSummary());
 	}
 
 	function OnTimer() {
