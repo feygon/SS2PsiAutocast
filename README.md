@@ -107,7 +107,7 @@ Reference point: Projected Cryokinesis (tier 1) gave a normal cast at 1450 ms an
 | Overload burns out | Lower `psi_release_ms` |
 | Overload gives a normal cast | Raise `psi_release_ms` |
 
-Each cast also prints `[psi_autocast]` lines to the game's log, showing the slot, whether the amp was in hand, and the timings.
+Each cast also prints `[psi_autocast]` lines to the console (Ctrl+;) and the game's log, showing the slot, whether the amp was in hand, and the timings.
 
 ## Uninstall
 

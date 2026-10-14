@@ -71,7 +71,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 - **Under KEX, the game runs NewDark 2.48** (`App Version: System Shock 2 Patch Final 2.48` in the log). `nvscript` and `squirrel` DLLs ship with the game.
 - **Script API used here:**
   - `Debug.Command("cmd args")` runs a console command
-  - `Debug.MPrint` logs a line
+  - `print()` writes to the console and the log; `Debug.MPrint` reaches the log only
   - `SetOneShotTimer(name, seconds)` / `OnTimer` handle timers
   - `Engine.ConfigIsDefined` / `ConfigGetInt(name, int_ref())` read config values
   - `ShockGame.Equipped(0)` returns the held weapon

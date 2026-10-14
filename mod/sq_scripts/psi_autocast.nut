@@ -31,7 +31,7 @@ class PsiCast extends SqRootScript {
 
 		SetData("Slot", slot);
 		SetData("ReleaseMs", releaseMs);
-		Debug.MPrint("[psi_autocast] slot " + slot + ", amp in hand: " + ampInHand + ", wait " + waitMs + "ms, hold " + releaseMs + "ms");
+		print("[psi_autocast] slot " + slot + ", amp in hand: " + ampInHand + ", wait " + waitMs + "ms, hold " + releaseMs + "ms");
 		SetOneShotTimer("PsiSelect", waitMs / 1000.0);
 	}
 
@@ -44,7 +44,7 @@ class PsiCast extends SqRootScript {
 		}
 		else if (name == "PsiRelease") {
 			Debug.Command("fire_weapon 0");
-			Debug.MPrint("[psi_autocast] released");
+			print("[psi_autocast] released");
 			Object.Destroy(self);
 		}
 	}
