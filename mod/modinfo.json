@@ -1,0 +1,7 @@
+{
+	"title": "psi_autocast",
+	"version": "0.4",
+	"description": "Helper objects that release the fire button after a short delay, so a single key can select a psi power and cast it. Spawn with summon_obj PsiAutoCast (normal cast) or PsiAutoOverload (release in the overload window).",
+	"author": "local",
+	"requirements": []
+}
