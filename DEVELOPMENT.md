@@ -130,8 +130,23 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Nested `run`** works: key files calling `run psi\lib\…` apply every part.
   - **Chains (v1.2):** Localized Pyrokinesis (immediate), then Projected Cryokinesis (`OnOverloadSuccess`), from the pistol, with 700 ms and 500 ms gaps.
   - **Conditional overload:** tier 1 held 1564 ms, giving `OnOverloadSuccess`. The tier 2 no-benefit discipline cast immediately, with the console explanation.
+- **Tested in game (2026-10-15, PSI 4, Normal or harder, no Pharmo-Friendly):** all of `dev/tests/TEST_PLAN.md` passed, from the pistol:
+  - **`arm` + `6o`:** amp drawn, overload with `OnOverloadSuccess`.
+  - **`6q,w500,15q`:** both casts go off, 549 ms apart.
+  - **`hypo` between casts:** a hypo is used.
+  - **`last`:** back to the pistol, twice in a row; the amp could still be drawn afterwards, by macro and by hand.
+  - **`weapon:Wrench`:** wrench drawn.
+  - **`psi_auto_hypo`:** at 13/51 psi, a hypo before cast 1 (threshold 31 = 51 − 20). At 32, no hypo. At 31, a second hypo. Re-checked before each cast, never wasting one.
+  - **No-arm guard:** with a non-amp weapon, the chain stops without firing. With the amp out, it casts.
+  - **Cancel:** Numpad + during a wait stopped the chain at step 5/8, with nothing stuck.
+- **Fixed along the way:**
+  - `Debug.Command` splitting at spaces (arm, hypo and weapon steps now run action files).
+  - Queued console `set` commands (chain casts now use `ND.psiPendingCast` and `Object.Create`).
+  - `last_weapon` going one weapon too far back.
+  - `ShockGame.Equip` leaving the amp unequippable.
 - **Still untested:**
-  - **Chain step kinds `arm`, `<id>o/q`, `w<ms>`, `hypo`, `last` and `weapon:<name>`, and `Macro_Builder.html` output, in game.** The builder's generated text has been checked in a browser. Also untested: what `last_weapon` returns to after the macro draws the amp, and `psi_auto_hypo`. It uses `ShockGame.GetPlayerPsiPoints()` / `GetPlayerMaxPsiPoints()` against max − `PsiHypoRestore()`: 30 on Easy (`Quest.Get("Difficulty") == 1`), 20 otherwise, × 1.2 with `eTrait.kTraitPharmo`. The amounts come from the player; SCP's description text says 20 and the base game's says 30.
+  - **Auto psi hypo on Easy (30) and with Pharmo-Friendly (36 / 24).** Only the 20-point case has run.
+  - **Cancel while a cast is mid-charge,** and Cancel with nothing running.
   - **Effective versus base PSI** for the zone lookup. They were equal during testing.
   - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.
