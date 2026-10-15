@@ -15,6 +15,14 @@ Press one key: your character draws the psi amp, selects the discipline and cast
 [*][b]Console feedback:[/b] every cast reports its tier, your pre-overload PSI, the overload zone and its decision.
 [/list]
 
+[size=4][b]Macro Builder[/b][/size]
+The easiest way to make your own macros: open [b]psi\Macro_Builder.html[/b] from the download in your browser (it works offline), or use the online copy at [url=https://feygon.github.io/SS2PsiAutocast/Macro_Builder.html]feygon.github.io/SS2PsiAutocast[/url].
+[list]
+[*]Pick a discipline and choose [b]conditional overload[/b] or [b]quickfire[/b], then add as many casts as you like, in order.
+[*]It starts with an [b]Arm psi amp[/b] step, which you can remove, and puts the right wait between each cast: 500 ms, the psi amp's refire limit. You can raise a wait, but it won't let you go below the limit.
+[*]It gives you the finished macro file (download or copy) and the exact key binding line for user.bnd, with install steps.
+[/list]
+
 [size=4][b]Write your own macros[/b][/size]
 Every script is a small text file built from shared parts, so you can make your own in Notepad, with no modding tools. A macro is a few [i]set[/i] lines plus calls to the parts in [i]psi\lib[/i]:
 [code]set psi_name T1_Projected_Cryokinesis
@@ -29,8 +37,9 @@ run psi\lib\draw_cast.cmd[/code]
 [*][b]quickfire.cmd[/b] or [b]overload.cmd[/b] chooses how it casts.
 [*][b]draw_cast.cmd[/b] draws the amp if needed, then casts.
 [/list]
-Chain macros cast several disciplines from one key. List the scripts in order:
-[code]set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis
+Chain macros cast several disciplines from one key. This is the format the Macro Builder writes: [i]arm[/i] draws the amp, [i]6o[/i] is discipline 6 with conditional overload, [i]15q[/i] is discipline 15 quickfired, and [i]w500[/i] waits 500 ms:
+[code]set psi_chain arm,6o,w500,15q
+set psi_draw_ms 800
 set psi_chain_gap_ms 500
 summon_obj PsiChain[/code]
 Macros are read fresh on every keypress, so you can edit them while the game is running. The readme lists every setting and every discipline number.
