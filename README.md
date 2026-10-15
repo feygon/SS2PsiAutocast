@@ -116,7 +116,7 @@ run psi\lib\draw_cast.cmd
 | `psi_slot` | Quick slot (6–12) to use when `psi_power` is 0. Fill it in game with Shift+F6 to F12 while hovering over the power |
 | `psi_benefits` | 1 if overloading improves the discipline, otherwise 0 |
 | `psi_mode` | Set by the parts: 0 quickfire, 1 conditional overload. 2 holds for exactly `psi_release_ms` (manual) |
-| `psi_draw_ms` | How long to wait for the amp to come up. 800 ms has been tested from the pistol; other weapons haven't been tested |
+| `psi_draw_ms` | How long to wait for the amp to come up. 800 ms works when switching from the pistol |
 
 - **Set every value in every script.** Values carry over from the last script that ran.
 - **`run psi\…` needs a backslash.** Forward slashes don't work.
@@ -147,7 +147,7 @@ Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
   - `last` switches back to the previous weapon, and `weapon:<name>` switches to a weapon, with underscores for spaces (`weapon:assault_rifle`). Put these last.
   - Example: `set psi_chain arm,6o,w500,hypo,w500,15q,w500,last`.
 - **Two casts must be at least 500 ms apart in total,** counting any hypo between them.
-- **Auto psi hypo:** with `set psi_auto_hypo 1` in a chain, each cast first checks your psi points. If they're at or below your maximum minus what a hypo restores, it uses a psi hypo, waits `psi_auto_hypo_wait_ms` (500), then casts, so none is wasted. A hypo restores 30 on Easy and 20 on Normal, Hard and Impossible, plus 20% with the Pharmo-Friendly O/S upgrade (36 or 24). The mod reads your difficulty and upgrades itself. Untested in the game.
+- **Auto psi hypo:** with `set psi_auto_hypo 1` in a chain, each cast first checks your psi points. If they're at or below your maximum minus what a hypo restores, it uses a psi hypo, waits `psi_auto_hypo_wait_ms` (500), then casts, so none is wasted. A hypo restores 30 on Easy and 20 on Normal, Hard and Impossible, plus 20% with the Pharmo-Friendly O/S upgrade (36 or 24). The mod reads your difficulty and upgrades itself.
 
 ## Action scripts
 
@@ -159,7 +159,7 @@ Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
 | `Switch_To_Previous_Weapon.cmd` | Switches back to the previous weapon (`last_weapon`) |
 | `Switch_To_<Weapon>.cmd` | Switches to that weapon: Wrench, Pistol, Shotgun, Assault_Rifle, Laser_Pistol, EMP_Rifle, Laser_Rapier, Grenade_Launcher, Stasis_Field_Generator, Fusion_Cannon, Crystal_Shard, Viral_Proliferator, Annelid_Launcher |
 
-Example: `bind y "run psi\actions\Use_Psi_Hypo.cmd"`. The psi hypo and weapon switch steps haven't been tested in the game yet.
+Example: `bind y "run psi\actions\Use_Psi_Hypo.cmd"`.
 - **Each step follows its own script:** the plain name overloads when the discipline benefits, and the `_Quickfire` name casts immediately.
 - **The first step draws the amp if needed.** Later steps find it already in hand.
 - **`psi_chain_gap_ms`** is the pause after each cast releases, before the next one starts. 500 ms matches the psi amp's refire limit (its `Shot Interval` in the game data). Lower values can swallow the next cast.

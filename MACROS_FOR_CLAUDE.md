@@ -80,7 +80,6 @@ summon_obj PsiChain
   - `hypo`: use a psi hypo (`use_obj psi booster`). Allowed anywhere.
   - `last`: switch back to the previous weapon (`last_weapon`). `weapon:<name>`: switch to a weapon by its `equip_weapon` name, with underscores for spaces. Valid names: `wrench`, `pistol`, `shotgun`, `assault_rifle`, `laser_pistol`, `emp_rifle`, `electro_shock` (Laser Rapier), `gren_launcher`, `stasis_field_generator`, `fusion_cannon`, `crystal_shard`, `viral_prolif`, `worm_launcher`. **Put a weapon switch only as the last step,** because casts after it would find the amp put away.
   - **Two casts must be at least 500 ms apart in total,** counting the waits around any hypo between them.
-  - **Untested in the game:** `hypo`, `last` and `weapon:`.
   - `<name>`: run `psi\<name>.cmd`, a discipline script. These draw the amp themselves.
 - **Direct casts (`<id>o` / `<id>q`) never draw the amp.** Without a leading `arm` step, the chain stops with a console message when the amp isn't in hand.
 - **Preferred form,** as produced by `psi\Macro_Builder.html`:
@@ -109,7 +108,7 @@ summon_obj PsiChain
 | `psi_draw_ms` | ms | Wait for the amp to come up when it isn't already in hand. 800 is reliable from the pistol |
 | `psi_chain` | comma-separated names | Chain steps |
 | `psi_chain_gap_ms` | ms, at least 500 | Pause after each release in a chain |
-| `psi_auto_hypo` | 0 or 1 | Before each cast in a chain, use a psi hypo if psi points are at or below max minus what a hypo restores. The mod works this out from `Quest.Get("Difficulty")` (1 = Easy: 30, otherwise 20) and the Pharmo-Friendly trait (× 1.2), giving 36 or 24. Always set it, to 0 or 1, because it carries over between macros. Untested in game |
+| `psi_auto_hypo` | 0 or 1 | Before each cast in a chain, use a psi hypo if psi points are at or below max minus what a hypo restores. The mod works this out from `Quest.Get("Difficulty")` (1 = Easy: 30, otherwise 20) and the Pharmo-Friendly trait (× 1.2), giving 36 or 24. Always set it, to 0 or 1, because it carries over between macros |
 | `psi_auto_hypo_wait_ms` | ms | Pause after an auto hypo before the cast (default 500) |
 
 ## Overload timing
