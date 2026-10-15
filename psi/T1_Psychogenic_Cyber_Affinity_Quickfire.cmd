@@ -1,0 +1,7 @@
+set psi_name T1_Psychogenic_Cyber_Affinity_Quickfire
+set psi_power 5
+set psi_slot 0
+set psi_benefits 0
+run psi\lib\T1.cmd
+run psi\lib\quickfire.cmd
+run psi\lib\draw_cast.cmd

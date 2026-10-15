@@ -1,0 +1,7 @@
+set psi_name T4_Remote_Pattern_Detection_Quickfire
+set psi_power 26
+set psi_slot 0
+set psi_benefits 0
+run psi\lib\T4.cmd
+run psi\lib\quickfire.cmd
+run psi\lib\draw_cast.cmd

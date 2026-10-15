@@ -1,0 +1,7 @@
+set psi_name T3_Enhanced_Motion_Sensitivity_Quickfire
+set psi_power 21
+set psi_slot 0
+set psi_benefits 0
+run psi\lib\T3.cmd
+run psi\lib\quickfire.cmd
+run psi\lib\draw_cast.cmd

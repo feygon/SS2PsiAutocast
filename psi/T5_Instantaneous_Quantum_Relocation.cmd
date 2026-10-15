@@ -1,0 +1,7 @@
+set psi_name T5_Instantaneous_Quantum_Relocation
+set psi_power 35
+set psi_slot 0
+set psi_benefits 0
+run psi\lib\T5.cmd
+run psi\lib\overload.cmd
+run psi\lib\draw_cast.cmd

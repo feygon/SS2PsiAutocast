@@ -46,8 +46,8 @@ def package_release():
     release = DIST_DIR / f"psi_autocast_v{mod_version()}.zip"
     with zipfile.ZipFile(release, "w", zipfile.ZIP_DEFLATED) as package:
         package.write(KPF_PATH, f"mods/{KPF_PATH.name}")
-        for cmd in sorted(KEYS_SOURCE.glob("*.cmd")):
-            package.write(cmd, f"psi/{cmd.name}")
+        for cmd in sorted(KEYS_SOURCE.rglob("*.cmd")):
+            package.write(cmd, "psi/" + cmd.relative_to(KEYS_SOURCE).as_posix())
         for doc in RELEASE_DOCS:
             package.write(PROJECT_DIR / doc, f"psi/psi_autocast_{doc}")
     print(f"packaged {release.name}")
@@ -66,9 +66,10 @@ def game_is_running():
 
 def install():
     keys_target = GAME_DIR / "psi"
-    keys_target.mkdir(exist_ok=True)
-    for cmd in sorted(KEYS_SOURCE.glob("*.cmd")):
-        shutil.copy2(cmd, keys_target / cmd.name)
+    for cmd in sorted(KEYS_SOURCE.rglob("*.cmd")):
+        target = keys_target / cmd.relative_to(KEYS_SOURCE)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(cmd, target)
     print(f"copied key files to {keys_target}")
 
     if game_is_running():

@@ -1,24 +1,32 @@
 # psi_autocast: one-key psi casting for System Shock 2: 25th Anniversary Remaster
 
-**TLDR:** Press one key and your character draws the psi amp, selects a power and casts it, with no click and no F-key cycling. It can do a normal cast or a timed overload. You choose the powers with the game's own quick slots (Shift+F6 to F12) and bind keys in `user.bnd`.
+**TLDR:** Bind a key to one of the included scripts. Pressing it draws the psi amp if needed, selects the discipline, and casts it. Quickfire scripts cast immediately. The other scripts overload automatically when the discipline benefits, timing the release from the game's own overload table for the discipline's tier and your current PSI. There's one pair of scripts per discipline, all 35.
 
 ## Contents
 1. [What it does](#what-it-does)
 2. [Requirements](#requirements)
 3. [Install](#install)
-4. [Set up a power](#set-up-a-power)
-5. [Key file settings](#key-file-settings)
-6. [Overloads](#overloads)
+4. [Bind a key](#bind-a-key)
+5. [How overload timing is calculated](#how-overload-timing-is-calculated)
+6. [Build your own key script](#build-your-own-key-script)
 7. [Troubleshooting](#troubleshooting)
 8. [Uninstall](#uninstall)
-9. [License](#license)
+9. [Discipline scripts](#discipline-scripts)
+10. [License](#license)
 
 ## What it does
 
-- **From any weapon:** the key puts the amp in your hand, waits for it to come up, then casts.
+- **From any weapon:** the script puts the amp in your hand, waits for it to come up, then casts.
 - **With the amp already out:** it casts immediately.
-- **Normal or overload:** each key holds fire for a set time. A short hold is a normal cast. A tuned hold lands in the yellow overload zone, with no mouse timing needed.
-- **Configured in plain text:** each key is a small `.cmd` file. Edit it while the game runs and the next keypress uses the new values.
+- **Quickfire** (`…_Quickfire.cmd`): casts immediately, whether or not the discipline could be overloaded.
+- **Conditional overload** (no suffix):
+  - **If overloading helps the discipline,** it holds fire just long enough to land in the yellow overload zone.
+  - **If it doesn't,** it casts immediately and says so in the console.
+- **Console feedback:** every cast reports its tier, your pre-overload PSI, the overload zone in milliseconds, and the decision. Open the console with Ctrl+;.
+  ```
+  [psi_autocast] T1_Projected_Cryokinesis: overloading, holding 1514ms (tier 1, pre-overload PSI 4, overload zone 1460-2000ms)
+  [psi_autocast] T1_Psychogenic_Agility doesn't benefit from an overload, so it's casting immediately (tier 1, pre-overload PSI 4, overload zone 1460-2000ms)
+  ```
 
 ## Requirements
 
@@ -31,89 +39,145 @@
 
 1. **Extract the zip into the game's install folder,** the one containing `SystemShock2Remastered.exe`. That creates:
    - `mods\psi_autocast.kpf`, the script mod
-   - `psi\psi_slot6_quick.cmd` and the other example key files, plus this readme
+   - `psi\`, with a script for every discipline, the shared parts in `psi\lib\`, and this readme
 2. **Enable the mod.** Choose **New Game → Mods**, add **psi_autocast**, then **Apply** and start the game. Once the first level loads, **load your own save**. Then make a regular save, so the mod stays enabled for that save.
    - The game stores a mod list in each save. Loading an older save directly won't enable the mod.
    - **Don't use the `mod_apply` console command mid-game.** It can unload the level and crash the game.
-   - To check: in the console (Ctrl+;), type `mod_list`. psi_autocast should be listed under "Mods to load."
-3. **Set up a power and bind a key,** as in the next section.
+   - To check: in the console, type `mod_list`. psi_autocast should be listed under "Mods to load."
 
-## Set up a power
+## Bind a key
 
-1. **Put the power in a quick slot.** Open the psi power list, hover over the **power itself** (not its tier's entry, which is first in the list), and press **Shift+F6**. Slots F6 to F12 work. Quick slots are saved with your game.
-2. **Close the game.** It rewrites the bindings file when it exits, so edits made while it's running are lost.
-3. **Open `user.bnd`** in Notepad. It's in:
+1. **Close the game.** It rewrites the bindings file when it exits, so edits made while it's running are lost.
+2. **Open `user.bnd`** in Notepad. It's in:
    `%USERPROFILE%\Saved Games\Nightdive Studios\System Shock 2 Remastered\`
    Back it up first.
-4. **Add one line per key.** Pick a key that isn't already bound (search the file for `bind <key> `):
+3. **Add one line per key,** using a script name from the [table below](#discipline-scripts). Pick a key that isn't already bound (search the file for `bind <key> `):
    ```
-   bind g "run psi\psi_slot6_quick.cmd"
+   bind g "run psi\T1_Projected_Cryokinesis_Quickfire.cmd"
+   bind j "run psi\T1_Projected_Cryokinesis.cmd"
    ```
-   The example files:
-
-   | File | Quick slot | Does |
-   |---|---|---|
-   | `psi_slot6_quick.cmd` … `psi_slot12_quick.cmd` | 6 … 12 | Normal cast |
-   | `psi_slot6_overload.cmd` | 6 | Overload, tuned for a tier 1 power. See [Overloads](#overloads) |
-
-5. **Start the game and press the key.**
+4. **Start the game and press the key.**
 
 One command per binding. `user.bnd` doesn't chain commands with semicolons, and a second `bind` on the same key replaces the first.
 
-## Key file settings
+## How overload timing is calculated
 
-Each `.cmd` file in the `psi` folder looks like this:
+The numbers come from the game's own **Overload Params** table (`OLPARAM` in `shock2.gam`; SCP doesn't change it).
 
+**Bar fill time by tier.** Releasing after the bar is full is burnout: the cast fails and you take damage.
+
+| Tier | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Bar fills in | 2.0 s | 1.5 s | 1.0 s | 0.75 s | 0.4 s |
+
+**Where the yellow zone starts, as a fraction of the bar, by PSI before casting.** Higher PSI widens the zone to the left.
+
+| PSI | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| Zone starts at | 1.00 | 0.94 | 0.85 | 0.73 | 0.58 | 0.40 | 0.19 | 0.01 |
+
+**How the script uses them:**
+- **Overload zone** = from (zone start × bar time) to (bar time).
+- **Hold time** = zone start plus 10% of the zone's width, and at least 50 ms past the start.
+- **If the zone is too narrow** to keep 50 ms from both edges (low PSI on a high tier, or PSI 1, where there's no zone), the script casts immediately and says so.
+- **PSI is the effective value** shown on your stats screen, including implants and boosters, capped to 1–8. The +2 from an overload applies to that cast only.
+- **Example:** at PSI 4, a tier 1 discipline's zone runs from 1460 to 2000 ms, and the script holds 1514 ms.
+
+Within a tier, every discipline shares the same timing. Whether a discipline gains anything from an overload is per discipline. The scripts follow the wiki's list of disciplines that benefit, shown in the [table below](#discipline-scripts).
+
+## Build your own key script
+
+Every script is a few `set` lines plus calls to shared parts in `psi\lib\`. Combine them to make your own:
+
+| Part | Sets |
+|---|---|
+| `psi\lib\T1.cmd` … `T5.cmd` | The discipline's tier |
+| `psi\lib\quickfire.cmd` | Quickfire: cast immediately |
+| `psi\lib\overload.cmd` | Conditional overload |
+| `psi\lib\draw_cast.cmd` | Draws the amp if needed (waits 800 ms), then casts. Must be last |
+
+Example, `T1_Projected_Cryokinesis.cmd`:
 ```
-set psi_slot 6
-set psi_draw_ms 800
-set psi_release_ms 100
-summon_obj PsiCast
-equip_weapon psi amp
+set psi_name T1_Projected_Cryokinesis
+set psi_power 6
+set psi_slot 0
+set psi_benefits 1
+run psi\lib\T1.cmd
+run psi\lib\overload.cmd
+run psi\lib\draw_cast.cmd
 ```
 
 | Setting | Meaning |
 |---|---|
-| `psi_slot` | The quick slot (6 to 12) holding the power |
-| `psi_draw_ms` | How long to wait for the amp to come up when it isn't already in hand. 800 ms is reliable from the pistol; heavier weapons may need more |
-| `psi_release_ms` | How long fire is held. 100 is a normal cast. Longer values charge toward an overload |
+| `psi_name` | Label shown in the console |
+| `psi_power` | Discipline number, from the [table below](#discipline-scripts). 0 means use a quick slot instead |
+| `psi_slot` | Quick slot (6–12) to use when `psi_power` is 0. Fill it in game with Shift+F6 to F12 while hovering over the power |
+| `psi_benefits` | 1 if overloading improves the discipline, otherwise 0 |
+| `psi_mode` | Set by the parts: 0 quickfire, 1 conditional overload. 2 holds for exactly `psi_release_ms` (manual) |
+| `psi_draw_ms` | How long to wait for the amp to come up. Heavier weapons may need more than 800 ms |
 
-- Keep `summon_obj PsiCast` **before** `equip_weapon psi amp`. The helper checks what's in your hand when it appears.
-- To add more keys, copy a file, give it a new name, change the numbers, and bind it.
-
-## Overloads
-
-Holding a cast fills a bar. Releasing in the **yellow** box at its right end overloads the power: it casts with +2 effective PSI, up to a maximum of 10. Releasing too late causes **burnout**: the power fails and you take damage.
-
-- **Only some powers benefit** (see the [wiki's list](https://shodan.fandom.com/wiki/Psionic_Disciplines)). Any power can burn out, so use quick-cast files for the rest.
-- **Higher-tier powers fill the bar faster**, so each overloaded power needs its own hold time.
-- **More PSI widens the yellow box**, so a value that works now keeps working as PSI rises.
-
-**To tune a power:**
-1. Copy `psi_slot6_overload.cmd` and set your slot.
-2. Make two more copies with longer and shorter `psi_release_ms` values, and bind all three to spare keys.
-3. Press each one and watch the console (Ctrl+;). An overload prints `OnOverloadSuccess`.
-4. Pick a value a little past the first one that overloads, then edit the files during play to adjust.
-
-Reference point: Projected Cryokinesis (tier 1) gave a normal cast at 1450 ms and overloaded from 1500 ms to 1650 ms with no burnout. The example uses 1550 ms.
+- **Set every value in every script.** Values carry over from the last script that ran.
+- **`run psi\…` needs a backslash.** Forward slashes don't work.
+- **Scripts are read on each keypress,** so edits take effect at once, even mid-game.
 
 ## Troubleshooting
 
 | Symptom | Cause and fix |
 |---|---|
 | Key does nothing at all | The binding is missing, or `user.bnd` was edited while the game was running. Close the game and check the line |
-| Amp comes out, nothing casts | Either the quick slot is empty in this save (set it again with Shift+F-key), or the mod isn't enabled for this save (`summon_obj` fails silently). Check `mod_list`, and see step 2 of [Install](#install) |
+| Amp comes out, nothing casts | The mod isn't enabled for this save (see [Install](#install)), or the discipline isn't learned. The console warns when a discipline seems to be unlearned |
 | Weapon switching is stuck after a cast | The trigger is still held. Click once. Then raise `psi_draw_ms`; the cast started before the amp was ready |
-| Overload burns out | Lower `psi_release_ms` |
-| Overload gives a normal cast | Raise `psi_release_ms` |
-
-Each cast also prints `[psi_autocast]` lines to the console (Ctrl+;) and the game's log, showing the slot, whether the amp was in hand, and the timings.
+| Overload burns out or misses | Report it with the console line. It shows the tier, PSI and timing used |
 
 ## Uninstall
 
 1. Remove the `bind` lines you added to `user.bnd`, with the game closed.
 2. Delete `mods\psi_autocast.kpf` and the `psi` folder.
 3. Remove psi_autocast from the mod list on your next New Game → Mods.
+
+## Discipline scripts
+
+Discipline numbers and names come from the game's `psihelp.str`. "Benefits from overload" follows the [System Shock wiki](https://shodan.fandom.com/wiki/Psionic_Disciplines). This table is generated by `make_keys.py`.
+
+<!-- disciplines:start -->
+| Tier | Discipline | Benefits from overload | Conditional overload script | Quickfire script |
+|---|---|---|---|---|
+| 1 | Psycho-Reflective Screen | No | `T1_Psycho_Reflective_Screen.cmd` | `T1_Psycho_Reflective_Screen_Quickfire.cmd` |
+| 1 | Neuro-Reflex Dampening | No | `T1_Neuro_Reflex_Dampening.cmd` | `T1_Neuro_Reflex_Dampening_Quickfire.cmd` |
+| 1 | Kinetic Redirection | Yes | `T1_Kinetic_Redirection.cmd` | `T1_Kinetic_Redirection_Quickfire.cmd` |
+| 1 | Psychogenic Agility | No | `T1_Psychogenic_Agility.cmd` | `T1_Psychogenic_Agility_Quickfire.cmd` |
+| 1 | Psychogenic Cyber-Affinity | No | `T1_Psychogenic_Cyber_Affinity.cmd` | `T1_Psychogenic_Cyber_Affinity_Quickfire.cmd` |
+| 1 | Projected Cryokinesis | Yes | `T1_Projected_Cryokinesis.cmd` | `T1_Projected_Cryokinesis_Quickfire.cmd` |
+| 1 | Remote Electron Tampering | Yes | `T1_Remote_Electron_Tampering.cmd` | `T1_Remote_Electron_Tampering_Quickfire.cmd` |
+| 2 | Anti-Entropic Field | No | `T2_Anti_Entropic_Field.cmd` | `T2_Anti_Entropic_Field_Quickfire.cmd` |
+| 2 | Adrenaline Overproduction | No | `T2_Adrenaline_Overproduction.cmd` | `T2_Adrenaline_Overproduction_Quickfire.cmd` |
+| 2 | Neural Decontamination | No | `T2_Neural_Decontamination.cmd` | `T2_Neural_Decontamination_Quickfire.cmd` |
+| 2 | Cerebro-Stimulated Regeneration | Yes | `T2_Cerebro_Stimulated_Regeneration.cmd` | `T2_Cerebro_Stimulated_Regeneration_Quickfire.cmd` |
+| 2 | Psychogenic Strength | No | `T2_Psychogenic_Strength.cmd` | `T2_Psychogenic_Strength_Quickfire.cmd` |
+| 2 | Recursive Psionic Amplification | No | `T2_Recursive_Psionic_Amplification.cmd` | `T2_Recursive_Psionic_Amplification_Quickfire.cmd` |
+| 2 | Localized Pyrokinesis | No | `T2_Localized_Pyrokinesis.cmd` | `T2_Localized_Pyrokinesis_Quickfire.cmd` |
+| 3 | Molecular Duplication | Yes | `T3_Molecular_Duplication.cmd` | `T3_Molecular_Duplication_Quickfire.cmd` |
+| 3 | Electron Cascade | Yes | `T3_Electron_Cascade.cmd` | `T3_Electron_Cascade_Quickfire.cmd` |
+| 3 | Energy Reflection | No | `T3_Energy_Reflection.cmd` | `T3_Energy_Reflection_Quickfire.cmd` |
+| 3 | Neural Toxin-Blocker | No | `T3_Neural_Toxin_Blocker.cmd` | `T3_Neural_Toxin_Blocker_Quickfire.cmd` |
+| 3 | Enhanced Motion Sensitivity | No | `T3_Enhanced_Motion_Sensitivity.cmd` | `T3_Enhanced_Motion_Sensitivity_Quickfire.cmd` |
+| 3 | Projected Pyrokinesis | Yes | `T3_Projected_Pyrokinesis.cmd` | `T3_Projected_Pyrokinesis_Quickfire.cmd` |
+| 3 | Psionic Hypnogenesis | Yes | `T3_Psionic_Hypnogenesis.cmd` | `T3_Psionic_Hypnogenesis_Quickfire.cmd` |
+| 4 | Photonic Redirection | No | `T4_Photonic_Redirection.cmd` | `T4_Photonic_Redirection_Quickfire.cmd` |
+| 4 | Remote Pattern Detection | No | `T4_Remote_Pattern_Detection.cmd` | `T4_Remote_Pattern_Detection_Quickfire.cmd` |
+| 4 | Electron Suppression | Yes | `T4_Electron_Suppression.cmd` | `T4_Electron_Suppression_Quickfire.cmd` |
+| 4 | Psychogenic Endurance | No | `T4_Psychogenic_Endurance.cmd` | `T4_Psychogenic_Endurance_Quickfire.cmd` |
+| 4 | Molecular Transmutation | Yes | `T4_Molecular_Transmutation.cmd` | `T4_Molecular_Transmutation_Quickfire.cmd` |
+| 4 | Remote Circuitry Manipulation | Yes | `T4_Remote_Circuitry_Manipulation.cmd` | `T4_Remote_Circuitry_Manipulation_Quickfire.cmd` |
+| 4 | Cerebro-Energetic Extension | No | `T4_Cerebro_Energetic_Extension.cmd` | `T4_Cerebro_Energetic_Extension_Quickfire.cmd` |
+| 5 | Advanced Cerebro-Stimulated Regeneration | Yes | `T5_Advanced_Cerebro_Stimulated_Regeneration.cmd` | `T5_Advanced_Cerebro_Stimulated_Regeneration_Quickfire.cmd` |
+| 5 | Soma Transference | Yes | `T5_Soma_Transference.cmd` | `T5_Soma_Transference_Quickfire.cmd` |
+| 5 | Instantaneous Quantum Relocation | No | `T5_Instantaneous_Quantum_Relocation.cmd` | `T5_Instantaneous_Quantum_Relocation_Quickfire.cmd` |
+| 5 | Imposed Neural Restructuring | Yes | `T5_Imposed_Neural_Restructuring.cmd` | `T5_Imposed_Neural_Restructuring_Quickfire.cmd` |
+| 5 | Metacreative Barrier | Yes | `T5_Metacreative_Barrier.cmd` | `T5_Metacreative_Barrier_Quickfire.cmd` |
+| 5 | External Psionic Detonation | No | `T5_External_Psionic_Detonation.cmd` | `T5_External_Psionic_Detonation_Quickfire.cmd` |
+| 5 | Psycho-Reflective Aura | No | `T5_Psycho_Reflective_Aura.cmd` | `T5_Psycho_Reflective_Aura_Quickfire.cmd` |
+<!-- disciplines:end -->
 
 ## License
 

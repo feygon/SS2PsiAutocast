@@ -1,0 +1,140 @@
+"""Generate the psi\\ key files and the README's discipline table.
+
+    py make_keys.py           key files call the shared parts in psi\\lib\\ with run
+    py make_keys.py --inline  key files contain the parts' lines directly (if nested run is unavailable)
+
+Each discipline gets two files:
+    T<tier>_<Name>_Quickfire.cmd  draw if needed, cast immediately
+    T<tier>_<Name>.cmd            draw if needed, overload if the discipline benefits, else cast immediately
+"""
+import argparse
+import re
+from pathlib import Path
+
+PROJECT_DIR = Path(__file__).resolve().parent
+KEYS_DIR = PROJECT_DIR / "psi"
+LIB_DIR = KEYS_DIR / "lib"
+README = PROJECT_DIR / "README.md"
+TABLE_START = "<!-- disciplines:start -->"
+TABLE_END = "<!-- disciplines:end -->"
+
+# (power id, name, benefits from overload)
+# Ids and names: Psi<N> in strings/psihelp.str, matching the PsiPower records in shock2.gam.
+# Tier = id // 8 + 1; ids 0, 8, 16, 24 and 32 are the tiers' Neural Capacity entries, not castable.
+# Overload benefit: https://shodan.fandom.com/wiki/Psionic_Disciplines ("Powers affected by overloading").
+DISCIPLINES = [
+    (1, "Psycho-Reflective Screen", False),
+    (2, "Neuro-Reflex Dampening", False),
+    (3, "Kinetic Redirection", True),
+    (4, "Psychogenic Agility", False),
+    (5, "Psychogenic Cyber-Affinity", False),
+    (6, "Projected Cryokinesis", True),
+    (7, "Remote Electron Tampering", True),
+    (9, "Anti-Entropic Field", False),
+    (10, "Adrenaline Overproduction", False),
+    (11, "Neural Decontamination", False),
+    (12, "Cerebro-Stimulated Regeneration", True),
+    (13, "Psychogenic Strength", False),
+    (14, "Recursive Psionic Amplification", False),
+    (15, "Localized Pyrokinesis", False),
+    (17, "Molecular Duplication", True),
+    (18, "Electron Cascade", True),
+    (19, "Energy Reflection", False),
+    (20, "Neural Toxin-Blocker", False),
+    (21, "Enhanced Motion Sensitivity", False),
+    (22, "Projected Pyrokinesis", True),
+    (23, "Psionic Hypnogenesis", True),
+    (25, "Photonic Redirection", False),
+    (26, "Remote Pattern Detection", False),
+    (27, "Electron Suppression", True),
+    (28, "Psychogenic Endurance", False),
+    (29, "Molecular Transmutation", True),
+    (30, "Remote Circuitry Manipulation", True),
+    (31, "Cerebro-Energetic Extension", False),
+    (33, "Advanced Cerebro-Stimulated Regeneration", True),
+    (34, "Soma Transference", True),
+    (35, "Instantaneous Quantum Relocation", False),
+    (36, "Imposed Neural Restructuring", True),
+    (37, "Metacreative Barrier", True),
+    (38, "External Psionic Detonation", False),
+    (39, "Psycho-Reflective Aura", False),
+]
+
+DRAW_MS = 800
+
+# The parts. Each is a .cmd file in psi\lib\ that sets one aspect of a cast.
+LIB_PARTS = {
+    **{f"T{tier}": [f"set psi_tier {tier}"] for tier in range(1, 6)},
+    "quickfire": ["set psi_mode 0"],
+    "overload": ["set psi_mode 1"],
+    "draw_cast": [f"set psi_draw_ms {DRAW_MS}", "summon_obj PsiCast", "equip_weapon psi amp"],
+}
+
+
+def tier_of(power):
+    return power // 8 + 1
+
+
+def file_stem(power, name):
+    return f"T{tier_of(power)}_" + re.sub(r"[^A-Za-z0-9]+", "_", name).strip("_")
+
+
+def key_file_lines(power, name, benefits, mode_part, inline):
+    stem = file_stem(power, name) + ("_Quickfire" if mode_part == "quickfire" else "")
+    lines = [
+        f"set psi_name {stem}",
+        f"set psi_power {power}",
+        "set psi_slot 0",
+        f"set psi_benefits {1 if benefits else 0}",
+    ]
+    for part in (f"T{tier_of(power)}", mode_part, "draw_cast"):
+        lines += LIB_PARTS[part] if inline else [f"run psi\\lib\\{part}.cmd"]
+    return stem, lines
+
+
+def write(path, lines):
+    path.write_text("\n".join(lines) + "\n", newline="\n")
+
+
+def readme_table():
+    rows = [
+        "| Tier | Discipline | Benefits from overload | Conditional overload script | Quickfire script |",
+        "|---|---|---|---|---|",
+    ]
+    for power, name, benefits in DISCIPLINES:
+        stem = file_stem(power, name)
+        rows.append(f"| {tier_of(power)} | {name} | {'Yes' if benefits else 'No'} | `{stem}.cmd` | `{stem}_Quickfire.cmd` |")
+    return "\n".join(rows)
+
+
+def update_readme():
+    text = README.read_text()
+    block = f"{TABLE_START}\n{readme_table()}\n{TABLE_END}"
+    pattern = re.compile(re.escape(TABLE_START) + r".*?" + re.escape(TABLE_END), re.S)
+    if not pattern.search(text):
+        raise SystemExit(f"README.md has no {TABLE_START} ... {TABLE_END} block")
+    README.write_text(pattern.sub(lambda _: block, text), newline="\n")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--inline", action="store_true", help="copy the parts into each key file instead of calling them")
+    args = parser.parse_args()
+
+    LIB_DIR.mkdir(parents=True, exist_ok=True)
+    for part, lines in LIB_PARTS.items():
+        write(LIB_DIR / f"{part}.cmd", lines)
+
+    for old in KEYS_DIR.glob("*.cmd"):
+        old.unlink()
+    for power, name, benefits in DISCIPLINES:
+        for mode_part in ("overload", "quickfire"):
+            stem, lines = key_file_lines(power, name, benefits, mode_part, args.inline)
+            write(KEYS_DIR / f"{stem}.cmd", lines)
+
+    update_readme()
+    print(f"wrote {len(LIB_PARTS)} parts, {2 * len(DISCIPLINES)} key files, README table")
+
+
+if __name__ == "__main__":
+    main()

@@ -35,11 +35,39 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 
 ## How a cast runs
 
-1. `bind g "run psi\psi_slot6_quick.cmd"`: the binding runs the key file.
-2. The key file runs `set psi_slot / psi_draw_ms / psi_release_ms`, then `summon_obj PsiCast`, then `equip_weapon psi amp`.
-3. `PsiCast.OnBeginScript` reads the settings with `Engine.ConfigGetInt`. It checks `ShockGame.Equipped(0)` against the `Psi Amp` archetype, then sets a timer for 10 ms if the amp was in hand, or for the draw time if not.
-4. Timer `PsiSelect` runs `Debug.Command("quickuse N")` and `Debug.Command("fire_weapon 1")`, then sets timer `PsiRelease`.
-5. Timer `PsiRelease` runs `Debug.Command("fire_weapon 0")`, which casts, then calls `Object.Destroy(self)`.
+1. `bind j "run psi\T1_Projected_Cryokinesis.cmd"`: the binding runs the key file.
+2. The key file sets `psi_name`, `psi_power`, `psi_slot` and `psi_benefits`. Then it runs three parts:
+   - the tier part, which sets `psi_tier`;
+   - the mode part, which sets `psi_mode`;
+   - `draw_cast`, which sets `psi_draw_ms`, runs `summon_obj PsiCast`, then `equip_weapon psi amp`.
+3. **`PsiCast.OnBeginScript`:**
+   - reads the settings with `Engine.ConfigGetInt` / `ConfigGetRaw`;
+   - takes effective PSI from `ShockGame.GetStat("Player", eStats.kStatPsi)`, capped to 1–8;
+   - works out the overload zone from the `OLPARAM` values, and picks a hold time based on the mode and whether the discipline benefits;
+   - prints the decision;
+   - checks `ShockGame.Equipped(0)` against `Psi Amp`, then sets a timer: 10 ms if the amp is in hand, otherwise the draw time.
+4. **Timer `PsiSelect`:** selects the discipline with `ShockGame.SetSelectedPsiPower(id)`, or `quickuse N` when `psi_power` is 0. Then it presses fire with `fire_weapon 1`.
+5. **Timer `PsiRelease`:** releases fire with `fire_weapon 0`, which casts, then calls `Object.Destroy(self)`.
+
+## Generating key files
+
+- **`py make_keys.py`** writes `psi\lib\` (the parts), two scripts per discipline in `psi\`, and the README's discipline table (between the `disciplines:start/end` markers).
+- **`py make_keys.py --inline`** copies the parts' lines into each script instead of calling them with `run`. Use it if nested `run` turns out not to work.
+- **The discipline list** (id, name, overload benefit) is the `DISCIPLINES` table in `make_keys.py`. Edit it there, never the generated files.
+
+## Game data used
+
+- **Discipline ids:** each `PsiPower` record's `Power` field in `shock2.gam` / `shockscp.gam` equals the `Psi<N>` index in `strings/psihelp.str`. The internal archetype names are legacy names: 6 `Cryokinesis`, 15 `Immolate`, 22 `Pyrokinesis`.
+  - **Tier** = id / 8 + 1.
+  - **Ids 0, 8, 16, 24, 32** are the tiers' Neural Capacity entries, not castable.
+  - **The `Start Cost` field** equals the tier.
+- **Overload timing:** the `OLPARAM` chunk ("Overload Params", 16 floats). It's identical in the base game and SCP:
+  - **Floats 0–7:** where the yellow zone starts, as a fraction of the bar, for pre-overload PSI 1–8: 1.00 0.94 0.85 0.73 0.58 0.40 0.19 0.01.
+  - **Floats 8–12:** bar fill time in seconds for tiers 1–5: 2.0 1.5 1.0 0.75 0.4.
+  - **Floats 13–15:** 0.85 0.82 0.78, meaning unknown (burnout-related?).
+  - **Validated by testing:** tier 1 at PSI 4 (zone 1460–2000 ms, matched); tier 2 burnout just after 1500 ms, at PSI 4 and 5.
+- **Reading game data files:** a `.gam` file is a Dark tag file. The first uint32 is the table-of-contents offset. The table of contents is a uint32 count followed by 20-byte entries (12-byte name, offset, size). Each chunk starts with a 24-byte header. Property chunks (`P$…`) are records of int32 object id, uint32 size, then the data.
+- **Learned disciplines:** `PsiPowerDesc` / `PsiPower2Desc` on the player are probably bit sets of learned disciplines (ids 0–31 and 32–39). Unverified, so the script only warns.
 
 ## Packaging and performance
 
@@ -89,6 +117,11 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 
 ## Open questions
 
+- **Not yet tested in game (v1.1):**
+  - **`ShockGame.SetSelectedPsiPower(id)`:** does it select the discipline that the next `fire_weapon` casts?
+  - **Nested `run`:** does a key file calling `run psi\lib\…` work? If not, regenerate with `make_keys.py --inline`.
+  - **Effective versus base PSI** for the zone lookup, and the `PsiPowerDesc` learned-bits reading.
+  - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.
 - **Draw time from heavier weapons.** `PsiCast` could pick the wait by the held weapon's archetype.
 - **Tap for a normal cast and hold for an overload on the same key:** not possible, because a script can't read whether a key is held.
 - **Steam and GOG installs:** untested. The expected difference is only the install path.
