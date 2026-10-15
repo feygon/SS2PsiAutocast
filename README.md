@@ -147,6 +147,7 @@ Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
   - `last` switches back to the previous weapon, and `weapon:<name>` switches to a weapon, with underscores for spaces (`weapon:assault_rifle`). Put these last.
   - Example: `set psi_chain arm,6o,w500,hypo,w500,15q,w500,last`.
 - **Two casts must be at least 500 ms apart in total,** counting any hypo between them.
+- **Auto psi hypo:** with `set psi_auto_hypo 1` in a chain, each cast first checks your psi points. If they're at or below your maximum minus 24, it uses a psi hypo, waits `psi_auto_hypo_wait_ms` (500), then casts. A hypo restores 20, or 24 with the Pharmo-Friendly O/S upgrade, so none is wasted. Untested in the game.
 
 ## Action scripts
 

@@ -167,6 +167,9 @@ ND.psiCastsReleased <- 0;
 const PSI_CHAIN_POLL_S = 0.05;
 const PSI_CHAIN_TIMEOUT_MS = 5000;  // longest a cast may take before the chain gives up
 const PSI_REFIRE_MS = 500;          // the psi amp's Shot Interval
+const PSI_HYPO_RESTORE = 24;        // psi a hypo restores: 20 (SCP), 24 with Pharmo-Friendly; 24 never wastes one
+// set psi_auto_hypo 1            before each cast, use a psi hypo if psi points <= max - PSI_HYPO_RESTORE
+// set psi_auto_hypo_wait_ms 500  pause after an auto hypo before the cast
 
 // Splits "a,b, c" into ["a", "b", "c"], skipping empty entries.
 function PsiSplitList(text) {
@@ -232,6 +235,7 @@ class PsiChain extends SqRootScript {
 		SetData("Steps", list.tostring());
 		SetData("Count", steps.len());
 		SetData("Index", 0);
+		SetData("AutoHypoFor", -1);
 		SetData("GapMs", CfgInt("psi_chain_gap_ms", PSI_REFIRE_MS));
 		Say(steps.len() + " steps: " + list.tostring());
 		// Never run commands from OnBeginScript: it runs while the chain's .cmd file is still being
@@ -252,6 +256,18 @@ class PsiChain extends SqRootScript {
 			return false;
 		local mode = step.slice(step.len() - 1);
 		return (mode == "o" || mode == "q") && PsiIsDigits(step.slice(0, step.len() - 1));
+	}
+
+	// True when psi_auto_hypo is on, this step casts, it hasn't already had its hypo,
+	// and psi points are at or below max - PSI_HYPO_RESTORE.
+	function AutoHypoDue(index) {
+		if (CfgInt("psi_auto_hypo", 0) == 0 || GetData("AutoHypoFor") == index)
+			return false;
+		local step = Step(index);
+		if (step == "arm" || step == "hypo" || step == "last" || IsWaitStep(step)
+			|| (step.len() > 7 && step.slice(0, 7) == "weapon:"))
+			return false;
+		return ShockGame.GetPlayerPsiPoints() <= ShockGame.GetPlayerMaxPsiPoints() - PSI_HYPO_RESTORE;
 	}
 
 	function Stop(reason) {
@@ -307,6 +323,19 @@ class PsiChain extends SqRootScript {
 			return;
 		}
 
+		// Auto psi hypo: top up before a cast when a hypo can't be wasted.
+		if (AutoHypoDue(index)) {
+			local points = ShockGame.GetPlayerPsiPoints();
+			local maxPoints = ShockGame.GetPlayerMaxPsiPoints();
+			local waitMs = CfgInt("psi_auto_hypo_wait_ms", PSI_REFIRE_MS);
+			Say(label + "psi " + points + "/" + maxPoints + " is at or below " + (maxPoints - PSI_HYPO_RESTORE)
+				+ " (max - " + PSI_HYPO_RESTORE + "), using a psi hypo first, then waiting " + waitMs + "ms");
+			Debug.Command("use_obj psi booster");
+			SetData("AutoHypoFor", index);
+			SetOneShotTimer("ChainRetry", waitMs / 1000.0);
+			return;
+		}
+
 		SetData("ReleasedBefore", ND.psiCastsReleased);
 		SetData("WaitedMs", 0);
 
@@ -336,7 +365,7 @@ class PsiChain extends SqRootScript {
 
 	function OnTimer() {
 		local name = message().name;
-		if (name == "ChainStart") {
+		if (name == "ChainStart" || name == "ChainRetry") {
 			StartStep();
 		}
 		else if (name == "ChainPoll") {

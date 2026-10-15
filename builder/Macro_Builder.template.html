@@ -95,6 +95,8 @@
     <h2>Other steps</h2>
     <p><button id="addHypo" type="button">Add psi hypo</button>
       <span class="hint">Uses one psi hypo from your inventory. It can go anywhere in the macro.</span></p>
+    <label class="radio" style="display:flex"><input id="autoHypo" type="checkbox"> Auto psi hypo before casts</label>
+    <p class="hint">Before each cast, uses a psi hypo if your psi points are at or below your maximum minus 24, then waits 500 ms. A hypo restores 20, or 24 with the Pharmo-Friendly O/S upgrade, so none is wasted.</p>
     <label for="finalWeapon">Finish with a weapon switch <span class="hint">(always the last step)</span></label>
     <div class="row">
       <select id="finalWeapon" style="width:auto"></select>
@@ -622,6 +624,9 @@ function renderOutput() {
   const key = $("bindKey").value.trim().toLowerCase() || "v";
   const lines = ["set psi_chain " + macroTokens().join(",")];
   if (state.arm) lines.push("set psi_draw_ms " + (Number($("drawMs").value) || 800));
+  // Always written, on or off: config values carry over from the last macro that ran.
+  lines.push("set psi_auto_hypo " + ($("autoHypo").checked ? 1 : 0));
+  if ($("autoHypo").checked) lines.push("set psi_auto_hypo_wait_ms " + REFIRE_MS);
   lines.push("set psi_chain_gap_ms " + REFIRE_MS, "summon_obj PsiChain");
   $("macroText").textContent = lines.join("\n");
   $("savePath").textContent = "psi\\chains\\" + name + ".cmd";
@@ -659,6 +664,10 @@ document.querySelectorAll("input[name=mode]").forEach(r => r.addEventListener("c
 $("addCast").addEventListener("click", addCast);
 $("finalWeapon").append(new Option("Previous weapon", "last"), ...WEAPONS.map(w => new Option(w.label, w.name)));
 $("addHypo").addEventListener("click", addHypo);
+$("autoHypo").addEventListener("change", () => {
+  flash($("otherStatus"), $("autoHypo").checked ? "Auto psi hypo is on." : "Auto psi hypo is off.");
+  renderOutput();
+});
 $("setWeapon").addEventListener("click", setFinalWeapon);
 $("addArm").addEventListener("click", () => { state.arm = true; render(); });
 $("macroName").addEventListener("input", () => { state.nameTouched = true; renderOutput(); });

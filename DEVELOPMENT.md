@@ -127,7 +127,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Chains (v1.2):** Localized Pyrokinesis (immediate), then Projected Cryokinesis (`OnOverloadSuccess`), from the pistol, with 700 ms and 500 ms gaps.
   - **Conditional overload:** tier 1 held 1564 ms, giving `OnOverloadSuccess`. The tier 2 no-benefit discipline cast immediately, with the console explanation.
 - **Still untested:**
-  - **Chain step kinds `arm`, `<id>o/q`, `w<ms>`, `hypo`, `last` and `weapon:<name>`, and `Macro_Builder.html` output, in game.** The builder's generated text has been checked in a browser. Also untested: what `last_weapon` returns to after the macro draws the amp.
+  - **Chain step kinds `arm`, `<id>o/q`, `w<ms>`, `hypo`, `last` and `weapon:<name>`, and `Macro_Builder.html` output, in game.** The builder's generated text has been checked in a browser. Also untested: what `last_weapon` returns to after the macro draws the amp, and `psi_auto_hypo`. It uses `ShockGame.GetPlayerPsiPoints()` / `GetPlayerMaxPsiPoints()` against max − 24; the hypo restores 20 under SCP (30 in the base game's text), or 24 with Pharmo-Friendly, per the player.
   - **Effective versus base PSI** for the zone lookup. They were equal during testing.
   - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.
