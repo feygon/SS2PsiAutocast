@@ -20,6 +20,7 @@ CLAUDE_GUIDE = PROJECT_DIR / "MACROS_FOR_CLAUDE.md"
 SCRIPT_DATA = PROJECT_DIR / "mod" / "sq_scripts" / "psi_autocast_disciplines.nut"
 BUILDER_TEMPLATE = PROJECT_DIR / "builder" / "Macro_Builder.template.html"
 BUILDER = KEYS_DIR / "Macro_Builder.html"
+SITE_BUILDER = PROJECT_DIR / "docs" / "Macro_Builder.html"  # published on GitHub Pages
 BUILDER_DATA_MARKER = "/*DISCIPLINES*/"
 TABLE_START = "<!-- disciplines:start -->"
 TABLE_END = "<!-- disciplines:end -->"
@@ -134,7 +135,9 @@ def write_builder():
     if BUILDER_DATA_MARKER not in template:
         raise SystemExit(f"{BUILDER_TEMPLATE.name} has no {BUILDER_DATA_MARKER} marker")
     html = template.replace(BUILDER_DATA_MARKER, json.dumps(disciplines, separators=(",", ":")))
-    BUILDER.write_text(html, encoding="utf-8", newline="\n")
+    for target in (BUILDER, SITE_BUILDER):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(html, encoding="utf-8", newline="\n")
 
 
 def update_table(doc, with_ids):
