@@ -71,7 +71,7 @@
   <p class="hint">Works offline. Nothing you enter leaves this page.</p>
 
   <section class="card" aria-labelledby="add-h">
-    <h2 id="add-h">1. Add a cast</h2>
+    <h2 id="add-h">1. Add steps</h2>
     <label id="disciplineLabel">Discipline</label>
     <div class="combo">
       <div id="discipline" role="combobox" tabindex="0" aria-haspopup="listbox" aria-expanded="false"
@@ -91,14 +91,26 @@
     </div>
     <div id="modeHint" class="hint"></div>
     <p><button id="addCast" type="button">Add cast</button> <span id="addStatus" class="status ok" aria-live="polite"></span></p>
+
+    <h2>Other steps</h2>
+    <p><button id="addHypo" type="button">Add psi hypo</button>
+      <span class="hint">Uses one psi hypo from your inventory. It can go anywhere in the macro.</span></p>
+    <label for="finalWeapon">Finish with a weapon switch <span class="hint">(always the last step)</span></label>
+    <div class="row">
+      <select id="finalWeapon" style="width:auto"></select>
+      <button id="setWeapon" type="button">Set final weapon</button>
+    </div>
+    <p class="hint">"Previous weapon" uses the game's <code>last_weapon</code> command.</p>
+    <p class="hint">Psi hypo and weapon switch steps haven't been tested in the game yet.</p>
+    <p><span id="otherStatus" class="status ok" aria-live="polite"></span></p>
   </section>
 
   <section class="card" aria-labelledby="steps-h">
     <h2 id="steps-h">2. Steps, in order</h2>
     <ol id="steps" class="steps"></ol>
     <p id="armMissing" class="warn" hidden>No arm step: this macro only works when the psi amp is already in your hands. If it isn't, the chain stops and says so in the console. <button id="addArm" type="button" class="small">Add arm step back</button></p>
-    <p id="noCasts" class="hint">No casts yet. Add one above.</p>
-    <p class="hint">Waits between casts default to 500 ms, the psi amp's refire limit. You can raise a wait, but not set it below 500.</p>
+    <p id="noCasts" class="hint">No steps yet. Add one above.</p>
+    <p class="hint">Waits default to 500 ms. Two casts must be at least 500 ms apart in total, counting any hypo between them, because that's the psi amp's refire limit. Other waits can be shorter.</p>
     <p class="hint">Durations come from the game's data, or from its help text where the data has no entry. They haven't been timed in play. "Max" uses PSI 8, the highest PSI in the game's overload table. When the step overloads a discipline that benefits, it uses PSI 10, since an overload adds 2 PSI according to the System Shock wiki.</p>
   </section>
 
@@ -149,12 +161,13 @@
 <script>
 "use strict";
 const DISCIPLINES = [{"id":1,"tier":1,"name":"Psycho-Reflective Screen","file":"T1_Psycho_Reflective_Screen","benefits":false,"duration":{"base":20,"perPsi":30,"source":"data"}},{"id":2,"tier":1,"name":"Neuro-Reflex Dampening","file":"T1_Neuro_Reflex_Dampening","benefits":false,"duration":{"base":60,"perPsi":20,"source":"data"}},{"id":3,"tier":1,"name":"Kinetic Redirection","file":"T1_Kinetic_Redirection","benefits":true,"duration":{"base":0,"perPsi":1,"source":"help"}},{"id":4,"tier":1,"name":"Psychogenic Agility","file":"T1_Psychogenic_Agility","benefits":false,"duration":{"base":120,"perPsi":60,"source":"data"}},{"id":5,"tier":1,"name":"Psychogenic Cyber-Affinity","file":"T1_Psychogenic_Cyber_Affinity","benefits":false,"duration":{"base":60,"perPsi":30,"source":"data"}},{"id":6,"tier":1,"name":"Projected Cryokinesis","file":"T1_Projected_Cryokinesis","benefits":true},{"id":7,"tier":1,"name":"Remote Electron Tampering","file":"T1_Remote_Electron_Tampering","benefits":true},{"id":9,"tier":2,"name":"Anti-Entropic Field","file":"T2_Anti_Entropic_Field","benefits":false,"duration":{"base":10,"perPsi":20,"source":"help"}},{"id":10,"tier":2,"name":"Adrenaline Overproduction","file":"T2_Adrenaline_Overproduction","benefits":false,"duration":{"base":0,"perPsi":10,"source":"data"}},{"id":11,"tier":2,"name":"Neural Decontamination","file":"T2_Neural_Decontamination","benefits":false,"duration":{"base":10,"perPsi":5,"source":"data"}},{"id":12,"tier":2,"name":"Cerebro-Stimulated Regeneration","file":"T2_Cerebro_Stimulated_Regeneration","benefits":true},{"id":13,"tier":2,"name":"Psychogenic Strength","file":"T2_Psychogenic_Strength","benefits":false,"duration":{"base":120,"perPsi":60,"source":"data"}},{"id":14,"tier":2,"name":"Recursive Psionic Amplification","file":"T2_Recursive_Psionic_Amplification","benefits":false,"duration":{"base":10,"perPsi":10,"source":"data"}},{"id":15,"tier":2,"name":"Localized Pyrokinesis","file":"T2_Localized_Pyrokinesis","benefits":false,"duration":{"base":15,"perPsi":8,"source":"data"}},{"id":17,"tier":3,"name":"Molecular Duplication","file":"T3_Molecular_Duplication","benefits":true},{"id":18,"tier":3,"name":"Electron Cascade","file":"T3_Electron_Cascade","benefits":true},{"id":19,"tier":3,"name":"Energy Reflection","file":"T3_Energy_Reflection","benefits":false,"duration":{"base":0,"perPsi":20,"source":"data"}},{"id":20,"tier":3,"name":"Neural Toxin-Blocker","file":"T3_Neural_Toxin_Blocker","benefits":false,"duration":{"base":10,"perPsi":5,"source":"data"}},{"id":21,"tier":3,"name":"Enhanced Motion Sensitivity","file":"T3_Enhanced_Motion_Sensitivity","benefits":false,"duration":{"base":0,"perPsi":30,"source":"data"}},{"id":22,"tier":3,"name":"Projected Pyrokinesis","file":"T3_Projected_Pyrokinesis","benefits":true},{"id":23,"tier":3,"name":"Psionic Hypnogenesis","file":"T3_Psionic_Hypnogenesis","benefits":true,"duration":{"base":0,"perPsi":20,"source":"help"}},{"id":25,"tier":4,"name":"Photonic Redirection","file":"T4_Photonic_Redirection","benefits":false,"duration":{"base":5,"perPsi":5,"source":"data"}},{"id":26,"tier":4,"name":"Remote Pattern Detection","file":"T4_Remote_Pattern_Detection","benefits":false,"duration":{"base":0,"perPsi":60,"source":"data"}},{"id":27,"tier":4,"name":"Electron Suppression","file":"T4_Electron_Suppression","benefits":true,"duration":{"base":0,"perPsi":3,"source":"help"}},{"id":28,"tier":4,"name":"Psychogenic Endurance","file":"T4_Psychogenic_Endurance","benefits":false,"duration":{"base":120,"perPsi":60,"source":"data"}},{"id":29,"tier":4,"name":"Molecular Transmutation","file":"T4_Molecular_Transmutation","benefits":true},{"id":30,"tier":4,"name":"Remote Circuitry Manipulation","file":"T4_Remote_Circuitry_Manipulation","benefits":true},{"id":31,"tier":4,"name":"Cerebro-Energetic Extension","file":"T4_Cerebro_Energetic_Extension","benefits":false,"duration":{"base":10,"perPsi":10,"source":"data"}},{"id":33,"tier":5,"name":"Advanced Cerebro-Stimulated Regeneration","file":"T5_Advanced_Cerebro_Stimulated_Regeneration","benefits":true},{"id":34,"tier":5,"name":"Soma Transference","file":"T5_Soma_Transference","benefits":true},{"id":35,"tier":5,"name":"Instantaneous Quantum Relocation","file":"T5_Instantaneous_Quantum_Relocation","benefits":false},{"id":36,"tier":5,"name":"Imposed Neural Restructuring","file":"T5_Imposed_Neural_Restructuring","benefits":true,"duration":{"base":0,"perPsi":10,"source":"help"}},{"id":37,"tier":5,"name":"Metacreative Barrier","file":"T5_Metacreative_Barrier","benefits":true,"duration":{"base":240,"perPsi":0,"source":"help"}},{"id":38,"tier":5,"name":"External Psionic Detonation","file":"T5_External_Psionic_Detonation","benefits":false,"duration":{"base":240,"perPsi":0,"source":"help"}},{"id":39,"tier":5,"name":"Psycho-Reflective Aura","file":"T5_Psycho_Reflective_Aura","benefits":false,"duration":{"base":10,"perPsi":20,"source":"data"}}];
+const WEAPONS = [{"label":"Wrench","name":"wrench"},{"label":"Pistol","name":"pistol"},{"label":"Shotgun","name":"shotgun"},{"label":"Assault Rifle","name":"assault rifle"},{"label":"Laser Pistol","name":"laser pistol"},{"label":"EMP Rifle","name":"emp rifle"},{"label":"Laser Rapier","name":"electro shock"},{"label":"Grenade Launcher","name":"gren launcher"},{"label":"Stasis Field Generator","name":"stasis field generator"},{"label":"Fusion Cannon","name":"fusion cannon"},{"label":"Crystal Shard","name":"crystal shard"},{"label":"Viral Proliferator","name":"viral prolif"},{"label":"Annelid Launcher","name":"worm launcher"}];
 const REFIRE_MS = 500;
 const byId = new Map(DISCIPLINES.map(d => [d.id, d]));
 const $ = id => document.getElementById(id);
 
-// State: an optional arm step, then casts. Each cast after the first carries the wait before it.
-const state = { arm: true, casts: [], nameTouched: false };
+// State: an optional arm step, the steps (casts and hypos), then an optional final weapon switch.
+const state = { arm: true, steps: [], finalWeapon: null, nameTouched: false };
 
 function flash(el, text, isError) {
   el.textContent = text;
@@ -352,17 +365,38 @@ function updateAddHints() {
     : "Quickfire: casts immediately, even if it could be overloaded.";
 }
 
-function addCast() {
-  const d = selectedDiscipline();
-  const mode = selectedMode();
-  state.casts.push({ id: d.id, mode: mode, waitBefore: REFIRE_MS });
-  flash($("addStatus"), "Added " + d.name + (mode === "q" ? " (quickfire)." : " (conditional overload)."));
+// A step is a cast { kind: "cast", id, mode } or a hypo { kind: "hypo" }. Every step after the
+// first carries the wait before it. The optional final weapon switch always comes last.
+function addStep(step, message) {
+  step.waitBefore = REFIRE_MS;
+  state.steps.push(step);
+  flash($("addStatus"), message);
   render();
 }
 
-function stepLabel(cast) {
-  const d = byId.get(cast.id);
-  return d.name;
+function addCast() {
+  const d = selectedDiscipline();
+  const mode = selectedMode();
+  addStep({ kind: "cast", id: d.id, mode: mode }, "Added " + d.name + (mode === "q" ? " (quickfire)." : " (conditional overload)."));
+}
+
+function addHypo() {
+  state.steps.push({ kind: "hypo", waitBefore: REFIRE_MS });
+  flash($("otherStatus"), "Added a psi hypo.");
+  render();
+}
+
+function setFinalWeapon() {
+  const value = $("finalWeapon").value;
+  const weapon = value === "last" ? { token: "last", label: "Previous weapon" } : WEAPONS.find(w => w.name === value);
+  state.finalWeapon = {
+    token: value === "last" ? "last" : "weapon:" + weapon.name.replace(/ /g, "_"),
+    label: value === "last" ? "Switch back to the previous weapon" : "Switch to " + weapon.label,
+    short: value === "last" ? "Previous_Weapon" : weapon.label.replace(/ /g, "_"),
+    waitBefore: state.finalWeapon ? state.finalWeapon.waitBefore : REFIRE_MS,
+  };
+  flash($("otherStatus"), state.finalWeapon.label + " is now the last step.");
+  render();
 }
 
 function makeButton(text, title, onClick, disabled) {
@@ -375,6 +409,45 @@ function makeButton(text, title, onClick, disabled) {
   b.disabled = !!disabled;
   b.addEventListener("click", onClick);
   return b;
+}
+
+function stepName(step) {
+  return step.kind === "hypo" ? "Use psi hypo" : byId.get(step.id).name;
+}
+
+// Casts must be at least REFIRE_MS apart in total, however many hypos sit between them.
+// Returns, for each step index, the total wait since the previous cast (or null if no earlier cast).
+function gapsSincePreviousCast() {
+  const gaps = [];
+  let sinceCast = null;
+  state.steps.forEach((step, i) => {
+    if (sinceCast !== null && i > 0) sinceCast += Number(step.waitBefore) || 0;
+    gaps.push(step.kind === "cast" ? sinceCast : null);
+    if (step.kind === "cast") sinceCast = 0;
+  });
+  return gaps;
+}
+
+function waitRow(owner, label, warning) {
+  const wait = document.createElement("li");
+  wait.className = "step wait";
+  const row = document.createElement("label");
+  row.className = "what";
+  row.style.margin = "0";
+  row.append("Wait ");
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = 0;
+  input.step = 50;
+  input.value = owner.waitBefore;
+  input.setAttribute("aria-label", "Wait before " + label + ", in milliseconds");
+  input.addEventListener("change", () => { owner.waitBefore = Number(input.value); render(); });
+  const note = document.createElement("span");
+  note.className = "warn";
+  note.textContent = warning || "";
+  row.append(input, " ms ", note);
+  wait.appendChild(row);
+  return wait;
 }
 
 function renderSteps() {
@@ -391,64 +464,70 @@ function renderSteps() {
     list.appendChild(li);
   }
 
-  state.casts.forEach((cast, i) => {
+  const gaps = gapsSincePreviousCast();
+  state.steps.forEach((step, i) => {
     if (i > 0) {
-      const wait = document.createElement("li");
-      wait.className = "step wait";
-      const label = document.createElement("label");
-      label.className = "what";
-      label.style.margin = "0";
-      label.append("Wait ");
-      const input = document.createElement("input");
-      input.type = "number";
-      input.min = REFIRE_MS;
-      input.step = 50;
-      input.value = cast.waitBefore;
-      input.setAttribute("aria-label", "Wait before cast " + (i + 1) + ", in milliseconds");
-      input.addEventListener("input", () => {
-        cast.waitBefore = Number(input.value);
-        note.textContent = cast.waitBefore < REFIRE_MS
-          ? "Minimum 500 ms: the psi amp can't fire again sooner, so the next cast would be lost."
-          : "";
-        renderOutput();
-      });
-      const note = document.createElement("span");
-      note.className = "warn";
-      label.append(input, " ms ", note);
-      wait.appendChild(label);
-      list.appendChild(wait);
+      const short = gaps[i] !== null && gaps[i] < REFIRE_MS;
+      list.appendChild(waitRow(step, stepName(step), short
+        ? "Casts must be at least 500 ms apart (the psi amp's refire limit). This gap is " + gaps[i] + " ms, so the cast would be lost."
+        : ""));
     }
 
     const li = document.createElement("li");
     li.className = "step";
     const what = document.createElement("div");
     what.className = "what";
-    const d = byId.get(cast.id);
     const name = document.createElement("b");
-    name.textContent = (i + 1) + ". " + d.name;
-    const tag = document.createElement("span");
-    const willOverload = cast.mode === "o" && d.benefits;
-    tag.className = "tag" + (willOverload ? " over" : "");
-    tag.textContent = cast.mode === "q" ? "quickfire" : (d.benefits ? "overload" : "immediate (no overload benefit)");
-    what.append(name, " ", tag);
-    const lasts = durationText(d, cast.mode);
-    if (lasts) {
+    name.textContent = (i + 1) + ". " + stepName(step);
+    what.append(name);
+
+    if (step.kind === "cast") {
+      const d = byId.get(step.id);
+      const tag = document.createElement("span");
+      const willOverload = step.mode === "o" && d.benefits;
+      tag.className = "tag" + (willOverload ? " over" : "");
+      tag.textContent = step.mode === "q" ? "quickfire" : (d.benefits ? "overload" : "immediate (no overload benefit)");
+      what.append(" ", tag);
+      const lasts = durationText(d, step.mode);
+      if (lasts) {
+        const line = document.createElement("div");
+        line.className = "hint";
+        line.textContent = lasts;
+        what.appendChild(line);
+      }
+    }
+    else {
       const line = document.createElement("div");
       line.className = "hint";
-      line.textContent = lasts;
+      line.textContent = "Uses one psi hypo from your inventory.";
       what.appendChild(line);
     }
+
+    const label = stepName(step);
     li.append(
       what,
-      makeButton("Up", "Move " + d.name + " earlier", () => { move(i, -1); }, i === 0),
-      makeButton("Down", "Move " + d.name + " later", () => { move(i, 1); }, i === state.casts.length - 1),
-      makeButton("Remove", "Remove " + d.name, () => { state.casts.splice(i, 1); render(); })
+      makeButton("Up", "Move " + label + " earlier", () => { move(i, -1); }, i === 0),
+      makeButton("Down", "Move " + label + " later", () => { move(i, 1); }, i === state.steps.length - 1),
+      makeButton("Remove", "Remove " + label, () => { state.steps.splice(i, 1); render(); })
     );
     list.appendChild(li);
   });
 
-  $("armMissing").hidden = state.arm;
-  $("noCasts").hidden = state.casts.length > 0;
+  if (state.finalWeapon) {
+    if (state.steps.length > 0) list.appendChild(waitRow(state.finalWeapon, "the weapon switch", ""));
+    const li = document.createElement("li");
+    li.className = "step";
+    const what = document.createElement("div");
+    what.className = "what";
+    const name = document.createElement("b");
+    name.textContent = state.finalWeapon.label;
+    what.append(name, " ", Object.assign(document.createElement("span"), { className: "tag", textContent: "last step" }));
+    li.append(what, makeButton("Remove", "Remove the weapon switch", () => { state.finalWeapon = null; render(); }));
+    list.appendChild(li);
+  }
+
+  $("armMissing").hidden = state.arm || !state.steps.some(s => s.kind === "cast");
+  $("noCasts").hidden = state.steps.length > 0 || state.finalWeapon !== null;
 }
 
 function formatSeconds(total) {
@@ -475,17 +554,29 @@ function durationText(d, mode) {
 
 function move(i, delta) {
   const j = i + delta;
-  if (j < 0 || j >= state.casts.length) return;
-  const casts = state.casts;
-  [casts[i].id, casts[j].id] = [casts[j].id, casts[i].id];
-  [casts[i].mode, casts[j].mode] = [casts[j].mode, casts[i].mode];
+  const steps = state.steps;
+  if (j < 0 || j >= steps.length) return;
+  // Swap the steps but keep each wait in its position in the sequence.
+  const [wi, wj] = [steps[i].waitBefore, steps[j].waitBefore];
+  [steps[i], steps[j]] = [steps[j], steps[i]];
+  steps[i].waitBefore = wi;
+  steps[j].waitBefore = wj;
   render();
 }
 
 function defaultName() {
-  if (state.casts.length === 0) return "My_Psi_Macro";
-  const parts = state.casts.map(c => byId.get(c.id).file.replace(/^T\d_/, "") + (c.mode === "q" ? "_Quick" : ""));
-  return ("Chain_" + parts.join("_then_")).slice(0, 80);
+  if (state.steps.length === 0 && !state.finalWeapon) return "My_Psi_Macro";
+  const parts = state.steps.map(s => s.kind === "hypo"
+    ? "Hypo"
+    : byId.get(s.id).file.replace(/^T\d_/, "") + (s.mode === "q" ? "_Quick" : ""));
+  if (state.finalWeapon) parts.push(state.finalWeapon.short);
+  // Keep whole parts: drop trailing ones until the name fits in 80 characters.
+  let name = "Chain_" + parts.join("_then_");
+  while (name.length > 80 && parts.length > 1) {
+    parts.pop();
+    name = "Chain_" + parts.join("_then_") + "_etc";
+  }
+  return name;
 }
 
 function cleanName(text) { return text.replace(/[^A-Za-z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, ""); }
@@ -493,17 +584,23 @@ function cleanName(text) { return text.replace(/[^A-Za-z0-9_]/g, "_").replace(/_
 function macroTokens() {
   const tokens = [];
   if (state.arm) tokens.push("arm");
-  state.casts.forEach((c, i) => {
-    if (i > 0) tokens.push("w" + c.waitBefore);
-    tokens.push(c.id + c.mode);
+  state.steps.forEach((s, i) => {
+    if (i > 0) tokens.push("w" + s.waitBefore);
+    tokens.push(s.kind === "hypo" ? "hypo" : s.id + s.mode);
   });
+  if (state.finalWeapon) {
+    if (state.steps.length > 0) tokens.push("w" + state.finalWeapon.waitBefore);
+    tokens.push(state.finalWeapon.token);
+  }
   return tokens;
 }
 
 function problems() {
   const list = [];
-  if (state.casts.length === 0) list.push("Add at least one cast.");
-  if (state.casts.some((c, i) => i > 0 && !(c.waitBefore >= REFIRE_MS))) list.push("Every wait must be at least 500 ms.");
+  if (state.steps.length === 0 && !state.finalWeapon) list.push("Add at least one step.");
+  if (gapsSincePreviousCast().some(g => g !== null && g < REFIRE_MS)) list.push("Casts must be at least 500 ms apart.");
+  const waits = state.steps.slice(1).map(s => s.waitBefore).concat(state.finalWeapon && state.steps.length ? [state.finalWeapon.waitBefore] : []);
+  if (waits.some(w => !(Number(w) >= 0))) list.push("Waits can't be negative.");
   const name = $("macroName").value;
   if (!name || cleanName(name) !== name) list.push("The file name may only use letters, numbers and underscores.");
   const key = $("bindKey").value.trim();
@@ -560,6 +657,9 @@ function download() {
 setupCombo();
 document.querySelectorAll("input[name=mode]").forEach(r => r.addEventListener("change", updateAddHints));
 $("addCast").addEventListener("click", addCast);
+$("finalWeapon").append(new Option("Previous weapon", "last"), ...WEAPONS.map(w => new Option(w.label, w.name)));
+$("addHypo").addEventListener("click", addHypo);
+$("setWeapon").addEventListener("click", setFinalWeapon);
 $("addArm").addEventListener("click", () => { state.arm = true; render(); });
 $("macroName").addEventListener("input", () => { state.nameTouched = true; renderOutput(); });
 $("bindKey").addEventListener("input", renderOutput);

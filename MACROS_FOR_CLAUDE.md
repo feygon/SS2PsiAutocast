@@ -76,7 +76,11 @@ summon_obj PsiChain
 - **Step kinds,** comma-separated, with no spaces:
   - `arm`: draw the amp if it isn't in hand, then wait `psi_draw_ms` (set it in the chain file, normally 800).
   - `<id>o`: cast discipline `<id>` with conditional overload. `<id>q`: quickfire it. The ids are in the [table](#discipline-numbers).
-  - `w<ms>`: wait that many milliseconds. Put one between casts, at least `w500`.
+  - `w<ms>`: wait that many milliseconds. Put one between steps.
+  - `hypo`: use a psi hypo (`use_obj psi booster`). Allowed anywhere.
+  - `last`: switch back to the previous weapon (`last_weapon`). `weapon:<name>`: switch to a weapon by its `equip_weapon` name, with underscores for spaces. Valid names: `wrench`, `pistol`, `shotgun`, `assault_rifle`, `laser_pistol`, `emp_rifle`, `electro_shock` (Laser Rapier), `gren_launcher`, `stasis_field_generator`, `fusion_cannon`, `crystal_shard`, `viral_prolif`, `worm_launcher`. **Put a weapon switch only as the last step,** because casts after it would find the amp put away.
+  - **Two casts must be at least 500 ms apart in total,** counting the waits around any hypo between them.
+  - **Untested in the game:** `hypo`, `last` and `weapon:`.
   - `<name>`: run `psi\<name>.cmd`, a discipline script. These draw the amp themselves.
 - **Direct casts (`<id>o` / `<id>q`) never draw the amp.** Without a leading `arm` step, the chain stops with a console message when the amp isn't in hand.
 - **Preferred form,** as produced by `psi\Macro_Builder.html`:

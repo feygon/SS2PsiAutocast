@@ -159,6 +159,9 @@ ND.psiCastsReleased <- 0;
 //   <id>o    cast discipline <id>, overloading if it benefits (conditional overload)
 //   <id>q    cast discipline <id> immediately (quickfire)
 //   w<ms>    wait <ms> milliseconds
+//   hypo     use a psi hypo (use_obj psi booster)
+//   last     switch back to the previous weapon (last_weapon)
+//   weapon:<name>  switch to a weapon by its equip_weapon name, underscores for spaces (weapon:assault_rifle)
 //   <name>   run psi\<name>.cmd (a discipline script, which draws the amp itself)
 // Inline casts (<id>o / <id>q) never draw the amp: without an arm step the amp must already be in hand.
 const PSI_CHAIN_POLL_S = 0.05;
@@ -182,6 +185,14 @@ function PsiSplitList(text) {
 	if (current.len() > 0)
 		items.push(current);
 	return items;
+}
+
+// "assault_rifle" -> "assault rifle" (chain steps can't contain spaces).
+function PsiUnderscoresToSpaces(text) {
+	local result = "";
+	foreach (ch in text)
+		result += ch == '_' ? " " : ch.tochar();
+	return result;
 }
 
 function PsiIsDigits(text) {
@@ -264,6 +275,28 @@ class PsiChain extends SqRootScript {
 				Debug.Command("equip_weapon psi amp");
 				SetOneShotTimer("ChainNext", drawMs / 1000.0);
 			}
+			return;
+		}
+
+		if (step == "hypo") {
+			Say(label + "use psi hypo");
+			Debug.Command("use_obj psi booster");
+			SetOneShotTimer("ChainNext", 0.01);
+			return;
+		}
+
+		if (step == "last") {
+			Say(label + "switch back to the previous weapon");
+			Debug.Command("last_weapon");
+			SetOneShotTimer("ChainNext", 0.01);
+			return;
+		}
+
+		if (step.len() > 7 && step.slice(0, 7) == "weapon:") {
+			local weapon = PsiUnderscoresToSpaces(step.slice(7));
+			Say(label + "switch to " + weapon);
+			Debug.Command("equip_weapon " + weapon);
+			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
 

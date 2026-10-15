@@ -10,10 +10,11 @@
 5. [How overload timing is calculated](#how-overload-timing-is-calculated)
 6. [Build your own key script](#build-your-own-key-script)
 7. [Chain several casts on one key](#chain-several-casts-on-one-key)
-8. [Troubleshooting](#troubleshooting)
-9. [Uninstall](#uninstall)
-10. [Discipline scripts](#discipline-scripts)
-11. [License](#license)
+8. [Action scripts](#action-scripts)
+9. [Troubleshooting](#troubleshooting)
+10. [Uninstall](#uninstall)
+11. [Discipline scripts](#discipline-scripts)
+12. [License](#license)
 
 ## What it does
 
@@ -142,7 +143,22 @@ Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
   - `6o` casts discipline 6 with conditional overload; `6q` quickfires it.
   - `w500` waits 500 ms.
   - Direct casts never draw the amp themselves. Without an `arm` step, the chain stops if the amp isn't in hand.
-  - Example: `set psi_chain arm,6o,w500,15q`.
+  - `hypo` uses a psi hypo. It can go anywhere.
+  - `last` switches back to the previous weapon, and `weapon:<name>` switches to a weapon, with underscores for spaces (`weapon:assault_rifle`). Put these last.
+  - Example: `set psi_chain arm,6o,w500,hypo,w500,15q,w500,last`.
+- **Two casts must be at least 500 ms apart in total,** counting any hypo between them.
+
+## Action scripts
+
+`psi\actions\` holds one-line scripts you can bind to a key on their own:
+
+| Script | Does |
+|---|---|
+| `Use_Psi_Hypo.cmd` | Uses a psi hypo (`use_obj psi booster`) |
+| `Switch_To_Previous_Weapon.cmd` | Switches back to the previous weapon (`last_weapon`) |
+| `Switch_To_<Weapon>.cmd` | Switches to that weapon: Wrench, Pistol, Shotgun, Assault_Rifle, Laser_Pistol, EMP_Rifle, Laser_Rapier, Grenade_Launcher, Stasis_Field_Generator, Fusion_Cannon, Crystal_Shard, Viral_Proliferator, Annelid_Launcher |
+
+Example: `bind y "run psi\actions\Use_Psi_Hypo.cmd"`. The psi hypo and weapon switch steps haven't been tested in the game yet.
 - **Each step follows its own script:** the plain name overloads when the discipline benefits, and the `_Quickfire` name casts immediately.
 - **The first step draws the amp if needed.** Later steps find it already in hand.
 - **`psi_chain_gap_ms`** is the pause after each cast releases, before the next one starts. 500 ms matches the psi amp's refire limit (its `Shot Interval` in the game data). Lower values can swallow the next cast.

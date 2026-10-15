@@ -80,6 +80,26 @@ DURATIONS = {
     36: (0, 10, "help"), 37: (240, 0, "help"), 38: (240, 0, "help"), 39: (10, 20, "data"),
 }
 
+# (display name, equip_weapon name). The names are the game's own, from its default user.bnd bindings.
+WEAPONS = [
+    ("Wrench", "wrench"),
+    ("Pistol", "pistol"),
+    ("Shotgun", "shotgun"),
+    ("Assault Rifle", "assault rifle"),
+    ("Laser Pistol", "laser pistol"),
+    ("EMP Rifle", "emp rifle"),
+    ("Laser Rapier", "electro shock"),
+    ("Grenade Launcher", "gren launcher"),
+    ("Stasis Field Generator", "stasis field generator"),
+    ("Fusion Cannon", "fusion cannon"),
+    ("Crystal Shard", "crystal shard"),
+    ("Viral Proliferator", "viral prolif"),
+    ("Annelid Launcher", "worm launcher"),
+]
+
+ACTIONS_DIR = KEYS_DIR / "actions"
+BUILDER_WEAPONS_MARKER = "/*WEAPONS*/"
+
 DRAW_MS = 800
 
 # The parts. Each is a .cmd file in psi\lib\ that sets one aspect of a cast.
@@ -138,6 +158,17 @@ def write_script_data():
     write(SCRIPT_DATA, lines)
 
 
+def write_actions():
+    """One-line action scripts, usable on their own key: psi hypo and weapon switches."""
+    ACTIONS_DIR.mkdir(parents=True, exist_ok=True)
+    for old in ACTIONS_DIR.glob("*.cmd"):
+        old.unlink()
+    write(ACTIONS_DIR / "Use_Psi_Hypo.cmd", ["use_obj psi booster"])
+    write(ACTIONS_DIR / "Switch_To_Previous_Weapon.cmd", ["last_weapon"])
+    for display, name in WEAPONS:
+        write(ACTIONS_DIR / f"Switch_To_{display.replace(' ', '_')}.cmd", [f"equip_weapon {name}"])
+
+
 def write_builder():
     """Macro_Builder.html with the discipline list embedded, so it works offline."""
     disciplines = []
@@ -150,7 +181,12 @@ def write_builder():
     template = BUILDER_TEMPLATE.read_text(encoding="utf-8")
     if BUILDER_DATA_MARKER not in template:
         raise SystemExit(f"{BUILDER_TEMPLATE.name} has no {BUILDER_DATA_MARKER} marker")
-    html = template.replace(BUILDER_DATA_MARKER, json.dumps(disciplines, separators=(",", ":")))
+    if BUILDER_WEAPONS_MARKER not in template:
+        raise SystemExit(f"{BUILDER_TEMPLATE.name} has no {BUILDER_WEAPONS_MARKER} marker")
+    weapons = [{"label": display, "name": name} for display, name in WEAPONS]
+    html = (template
+            .replace(BUILDER_DATA_MARKER, json.dumps(disciplines, separators=(",", ":")))
+            .replace(BUILDER_WEAPONS_MARKER, json.dumps(weapons, separators=(",", ":"))))
     for target in (BUILDER, SITE_BUILDER):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(html, encoding="utf-8", newline="\n")
@@ -184,6 +220,7 @@ def main():
     update_table(README, with_ids=False)
     update_table(CLAUDE_GUIDE, with_ids=True)
     write_script_data()
+    write_actions()
     write_builder()
     print(f"wrote {len(LIB_PARTS)} parts, {2 * len(DISCIPLINES)} key files, README and Claude guide tables")
 
