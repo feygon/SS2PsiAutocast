@@ -117,10 +117,13 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 
 ## Open questions
 
-- **Not yet tested in game (v1.1):**
-  - **`ShockGame.SetSelectedPsiPower(id)`:** does it select the discipline that the next `fire_weapon` casts?
-  - **Nested `run`:** does a key file calling `run psi\lib\…` work? If not, regenerate with `make_keys.py --inline`.
-  - **Effective versus base PSI** for the zone lookup, and the `PsiPowerDesc` learned-bits reading.
+- **Tested in game (v1.1, 2026-10-14, PSI 4):**
+  - **`ShockGame.SetSelectedPsiPower(id)`** selects the discipline that the next `fire_weapon` casts. Kinetic Redirection was selected and the pistol was in hand; the key drew the amp, switched to Cryokinesis and overloaded it.
+  - **Nested `run`** works: key files calling `run psi\lib\…` apply every part.
+  - **Conditional overload:** tier 1 held 1564 ms, giving `OnOverloadSuccess`. The tier 2 no-benefit discipline cast immediately, with the console explanation.
+- **Still untested:**
+  - **Effective versus base PSI** for the zone lookup. They were equal during testing.
+  - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.
 - **Draw time from heavier weapons.** `PsiCast` could pick the wait by the held weapon's archetype.
 - **Tap for a normal cast and hold for an overload on the same key:** not possible, because a script can't read whether a key is held.
