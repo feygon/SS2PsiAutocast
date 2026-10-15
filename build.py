@@ -23,7 +23,7 @@ DEV_SOURCE = PROJECT_DIR / "dev"
 KEYS_SOURCE = PROJECT_DIR / "psi"
 DIST_DIR = PROJECT_DIR / "dist"
 KPF_PATH = DIST_DIR / "psi_autocast.kpf"
-RELEASE_DOCS = ["README.md", "LICENSE"]
+RELEASE_DOCS = ["README.md", "MACROS_FOR_CLAUDE.md", "LICENSE"]
 
 
 def mod_version():

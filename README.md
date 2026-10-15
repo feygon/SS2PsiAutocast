@@ -120,6 +120,7 @@ run psi\lib\draw_cast.cmd
 - **Set every value in every script.** Values carry over from the last script that ran.
 - **`run psi\…` needs a backslash.** Forward slashes don't work.
 - **Scripts are read on each keypress,** so edits take effect at once, even mid-game.
+- **To have Claude write macros for you,** give it `psi\psi_autocast_MACROS_FOR_CLAUDE.md`, which documents the inner workings for Claude, and describe the macro you want.
 
 ## Chain several casts on one key
 

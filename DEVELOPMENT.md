@@ -51,7 +51,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 
 ## Generating key files
 
-- **`py make_keys.py`** writes `psi\lib\` (the parts), two scripts per discipline in `psi\`, and the README's discipline table (between the `disciplines:start/end` markers).
+- **`py make_keys.py`** writes `psi\lib\` (the parts), two scripts per discipline in `psi\`, and the discipline tables in README.md and MACROS_FOR_CLAUDE.md (between the `disciplines:start/end` markers).
 - **`py make_keys.py --inline`** copies the parts' lines into each script instead of calling them with `run`. Use it if nested `run` turns out not to work.
 - **The discipline list** (id, name, overload benefit) is the `DISCIPLINES` table in `make_keys.py`. Edit it there, never the generated files.
 

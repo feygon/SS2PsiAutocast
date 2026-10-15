@@ -15,6 +15,7 @@ PROJECT_DIR = Path(__file__).resolve().parent
 KEYS_DIR = PROJECT_DIR / "psi"
 LIB_DIR = KEYS_DIR / "lib"
 README = PROJECT_DIR / "README.md"
+CLAUDE_GUIDE = PROJECT_DIR / "MACROS_FOR_CLAUDE.md"
 TABLE_START = "<!-- disciplines:start -->"
 TABLE_END = "<!-- disciplines:end -->"
 
@@ -96,24 +97,24 @@ def write(path, lines):
     path.write_text("\n".join(lines) + "\n", newline="\n")
 
 
-def readme_table():
-    rows = [
-        "| Tier | Discipline | Benefits from overload | Conditional overload script | Quickfire script |",
-        "|---|---|---|---|---|",
-    ]
+def discipline_table(with_ids):
+    head = "| Tier | Discipline | Benefits from overload | Conditional overload script | Quickfire script |"
+    rule = "|---|---|---|---|---|"
+    rows = [("| `psi_power` " if with_ids else "") + head, ("|---" if with_ids else "") + rule]
     for power, name, benefits in DISCIPLINES:
         stem = file_stem(power, name)
-        rows.append(f"| {tier_of(power)} | {name} | {'Yes' if benefits else 'No'} | `{stem}.cmd` | `{stem}_Quickfire.cmd` |")
+        row = f"| {tier_of(power)} | {name} | {'Yes' if benefits else 'No'} | `{stem}.cmd` | `{stem}_Quickfire.cmd` |"
+        rows.append((f"| {power} " if with_ids else "") + row)
     return "\n".join(rows)
 
 
-def update_readme():
-    text = README.read_text()
-    block = f"{TABLE_START}\n{readme_table()}\n{TABLE_END}"
+def update_table(doc, with_ids):
+    text = doc.read_text()
+    block = f"{TABLE_START}\n{discipline_table(with_ids)}\n{TABLE_END}"
     pattern = re.compile(re.escape(TABLE_START) + r".*?" + re.escape(TABLE_END), re.S)
     if not pattern.search(text):
-        raise SystemExit(f"README.md has no {TABLE_START} ... {TABLE_END} block")
-    README.write_text(pattern.sub(lambda _: block, text), newline="\n")
+        raise SystemExit(f"{doc.name} has no {TABLE_START} ... {TABLE_END} block")
+    doc.write_text(pattern.sub(lambda _: block, text), newline="\n")
 
 
 def main():
@@ -132,8 +133,9 @@ def main():
             stem, lines = key_file_lines(power, name, benefits, mode_part, args.inline)
             write(KEYS_DIR / f"{stem}.cmd", lines)
 
-    update_readme()
-    print(f"wrote {len(LIB_PARTS)} parts, {2 * len(DISCIPLINES)} key files, README table")
+    update_table(README, with_ids=False)
+    update_table(CLAUDE_GUIDE, with_ids=True)
+    print(f"wrote {len(LIB_PARTS)} parts, {2 * len(DISCIPLINES)} key files, README and Claude guide tables")
 
 
 if __name__ == "__main__":
