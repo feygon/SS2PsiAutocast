@@ -67,6 +67,19 @@ DISCIPLINES = [
     (39, "Psycho-Reflective Aura", False),
 ]
 
+# Effect duration in seconds: power id -> (base, per PSI, source).
+# "data": PsiShield Base Time / Add Time in shock2.gam (what the game uses).
+# "help": the in-game help text (psihelp.str); these disciplines have no PsiShield entry.
+# The help text disagrees with the data for 5 (says 120 + 60) and 31 (says 0 + 10); the data is used.
+DURATIONS = {
+    1: (20, 30, "data"), 2: (60, 20, "data"), 3: (0, 1, "help"), 4: (120, 60, "data"),
+    5: (60, 30, "data"), 9: (10, 20, "help"), 10: (0, 10, "data"), 11: (10, 5, "data"),
+    13: (120, 60, "data"), 14: (10, 10, "data"), 15: (15, 8, "data"), 19: (0, 20, "data"),
+    20: (10, 5, "data"), 21: (0, 30, "data"), 23: (0, 20, "help"), 25: (5, 5, "data"),
+    26: (0, 60, "data"), 27: (0, 3, "help"), 28: (120, 60, "data"), 31: (10, 10, "data"),
+    36: (0, 10, "help"), 37: (240, 0, "help"), 38: (240, 0, "help"), 39: (10, 20, "data"),
+}
+
 DRAW_MS = 800
 
 # The parts. Each is a .cmd file in psi\lib\ that sets one aspect of a cast.
@@ -127,10 +140,13 @@ def write_script_data():
 
 def write_builder():
     """Macro_Builder.html with the discipline list embedded, so it works offline."""
-    disciplines = [
-        {"id": power, "tier": tier_of(power), "name": name, "file": file_stem(power, name), "benefits": benefits}
-        for power, name, benefits in DISCIPLINES
-    ]
+    disciplines = []
+    for power, name, benefits in DISCIPLINES:
+        entry = {"id": power, "tier": tier_of(power), "name": name, "file": file_stem(power, name), "benefits": benefits}
+        if power in DURATIONS:
+            base, per_psi, source = DURATIONS[power]
+            entry["duration"] = {"base": base, "perPsi": per_psi, "source": source}
+        disciplines.append(entry)
     template = BUILDER_TEMPLATE.read_text(encoding="utf-8")
     if BUILDER_DATA_MARKER not in template:
         raise SystemExit(f"{BUILDER_TEMPLATE.name} has no {BUILDER_DATA_MARKER} marker")

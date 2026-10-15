@@ -71,6 +71,7 @@
     <p id="armMissing" class="warn" hidden>No arm step: this macro only works when the psi amp is already in your hands. If it isn't, the chain stops and says so in the console. <button id="addArm" type="button" class="small">Add arm step back</button></p>
     <p id="noCasts" class="hint">No casts yet. Add one above.</p>
     <p class="hint">Waits between casts default to 500 ms, the psi amp's refire limit. You can raise a wait, but not set it below 500.</p>
+    <p class="hint">Durations come from the game's data, or from its help text where the data has no entry. They haven't been timed in play. "Max" uses PSI 8, the highest PSI in the game's overload table. When the step overloads a discipline that benefits, it uses PSI 10, since an overload adds 2 PSI according to the System Shock wiki.</p>
   </section>
 
   <section class="card" aria-labelledby="settings-h">
@@ -243,6 +244,13 @@ function renderSteps() {
     tag.className = "tag" + (willOverload ? " over" : "");
     tag.textContent = cast.mode === "q" ? "quickfire" : (d.benefits ? "overload" : "immediate (no overload benefit)");
     what.append(name, " ", tag);
+    const lasts = durationText(d, cast.mode);
+    if (lasts) {
+      const line = document.createElement("div");
+      line.className = "hint";
+      line.textContent = lasts;
+      what.appendChild(line);
+    }
     li.append(
       what,
       makeButton("Up", "Move " + d.name + " earlier", () => { move(i, -1); }, i === 0),
@@ -254,6 +262,28 @@ function renderSteps() {
 
   $("armMissing").hidden = state.arm;
   $("noCasts").hidden = state.casts.length > 0;
+}
+
+function formatSeconds(total) {
+  const min = Math.floor(total / 60);
+  const sec = total % 60;
+  if (min === 0) return sec + " s";
+  return sec === 0 ? min + " min" : min + " min " + sec + " s";
+}
+
+// "Lasts 60 s + 30 s × PSI. Max 5 min (at PSI 8)." Empty when the discipline has no duration.
+function durationText(d, mode) {
+  if (!d.duration) return "";
+  const { base, perPsi, source } = d.duration;
+  const from = source === "help" ? " (from the in-game help text)" : "";
+  if (perPsi === 0) return "Lasts " + formatSeconds(base) + ", whatever your PSI" + from + ".";
+  const equation = base === 0
+    ? formatSeconds(perPsi) + " × PSI"
+    : formatSeconds(base) + " + " + formatSeconds(perPsi) + " × PSI";
+  const overloaded = mode === "o" && d.benefits;
+  const maxPsi = overloaded ? 10 : 8;
+  return "Lasts " + equation + ". Max " + formatSeconds(base + perPsi * maxPsi)
+    + " (at PSI " + maxPsi + (overloaded ? ", overloaded" : "") + ")" + from + ".";
 }
 
 function move(i, delta) {

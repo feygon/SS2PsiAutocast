@@ -71,6 +71,7 @@
     <p id="armMissing" class="warn" hidden>No arm step: this macro only works when the psi amp is already in your hands. If it isn't, the chain stops and says so in the console. <button id="addArm" type="button" class="small">Add arm step back</button></p>
     <p id="noCasts" class="hint">No casts yet. Add one above.</p>
     <p class="hint">Waits between casts default to 500 ms, the psi amp's refire limit. You can raise a wait, but not set it below 500.</p>
+    <p class="hint">Durations come from the game's data, or from its help text where the data has no entry. They haven't been timed in play. "Max" uses PSI 8, the highest PSI in the game's overload table. When the step overloads a discipline that benefits, it uses PSI 10, since an overload adds 2 PSI according to the System Shock wiki.</p>
   </section>
 
   <section class="card" aria-labelledby="settings-h">
@@ -119,7 +120,7 @@
 
 <script>
 "use strict";
-const DISCIPLINES = [{"id":1,"tier":1,"name":"Psycho-Reflective Screen","file":"T1_Psycho_Reflective_Screen","benefits":false},{"id":2,"tier":1,"name":"Neuro-Reflex Dampening","file":"T1_Neuro_Reflex_Dampening","benefits":false},{"id":3,"tier":1,"name":"Kinetic Redirection","file":"T1_Kinetic_Redirection","benefits":true},{"id":4,"tier":1,"name":"Psychogenic Agility","file":"T1_Psychogenic_Agility","benefits":false},{"id":5,"tier":1,"name":"Psychogenic Cyber-Affinity","file":"T1_Psychogenic_Cyber_Affinity","benefits":false},{"id":6,"tier":1,"name":"Projected Cryokinesis","file":"T1_Projected_Cryokinesis","benefits":true},{"id":7,"tier":1,"name":"Remote Electron Tampering","file":"T1_Remote_Electron_Tampering","benefits":true},{"id":9,"tier":2,"name":"Anti-Entropic Field","file":"T2_Anti_Entropic_Field","benefits":false},{"id":10,"tier":2,"name":"Adrenaline Overproduction","file":"T2_Adrenaline_Overproduction","benefits":false},{"id":11,"tier":2,"name":"Neural Decontamination","file":"T2_Neural_Decontamination","benefits":false},{"id":12,"tier":2,"name":"Cerebro-Stimulated Regeneration","file":"T2_Cerebro_Stimulated_Regeneration","benefits":true},{"id":13,"tier":2,"name":"Psychogenic Strength","file":"T2_Psychogenic_Strength","benefits":false},{"id":14,"tier":2,"name":"Recursive Psionic Amplification","file":"T2_Recursive_Psionic_Amplification","benefits":false},{"id":15,"tier":2,"name":"Localized Pyrokinesis","file":"T2_Localized_Pyrokinesis","benefits":false},{"id":17,"tier":3,"name":"Molecular Duplication","file":"T3_Molecular_Duplication","benefits":true},{"id":18,"tier":3,"name":"Electron Cascade","file":"T3_Electron_Cascade","benefits":true},{"id":19,"tier":3,"name":"Energy Reflection","file":"T3_Energy_Reflection","benefits":false},{"id":20,"tier":3,"name":"Neural Toxin-Blocker","file":"T3_Neural_Toxin_Blocker","benefits":false},{"id":21,"tier":3,"name":"Enhanced Motion Sensitivity","file":"T3_Enhanced_Motion_Sensitivity","benefits":false},{"id":22,"tier":3,"name":"Projected Pyrokinesis","file":"T3_Projected_Pyrokinesis","benefits":true},{"id":23,"tier":3,"name":"Psionic Hypnogenesis","file":"T3_Psionic_Hypnogenesis","benefits":true},{"id":25,"tier":4,"name":"Photonic Redirection","file":"T4_Photonic_Redirection","benefits":false},{"id":26,"tier":4,"name":"Remote Pattern Detection","file":"T4_Remote_Pattern_Detection","benefits":false},{"id":27,"tier":4,"name":"Electron Suppression","file":"T4_Electron_Suppression","benefits":true},{"id":28,"tier":4,"name":"Psychogenic Endurance","file":"T4_Psychogenic_Endurance","benefits":false},{"id":29,"tier":4,"name":"Molecular Transmutation","file":"T4_Molecular_Transmutation","benefits":true},{"id":30,"tier":4,"name":"Remote Circuitry Manipulation","file":"T4_Remote_Circuitry_Manipulation","benefits":true},{"id":31,"tier":4,"name":"Cerebro-Energetic Extension","file":"T4_Cerebro_Energetic_Extension","benefits":false},{"id":33,"tier":5,"name":"Advanced Cerebro-Stimulated Regeneration","file":"T5_Advanced_Cerebro_Stimulated_Regeneration","benefits":true},{"id":34,"tier":5,"name":"Soma Transference","file":"T5_Soma_Transference","benefits":true},{"id":35,"tier":5,"name":"Instantaneous Quantum Relocation","file":"T5_Instantaneous_Quantum_Relocation","benefits":false},{"id":36,"tier":5,"name":"Imposed Neural Restructuring","file":"T5_Imposed_Neural_Restructuring","benefits":true},{"id":37,"tier":5,"name":"Metacreative Barrier","file":"T5_Metacreative_Barrier","benefits":true},{"id":38,"tier":5,"name":"External Psionic Detonation","file":"T5_External_Psionic_Detonation","benefits":false},{"id":39,"tier":5,"name":"Psycho-Reflective Aura","file":"T5_Psycho_Reflective_Aura","benefits":false}];
+const DISCIPLINES = [{"id":1,"tier":1,"name":"Psycho-Reflective Screen","file":"T1_Psycho_Reflective_Screen","benefits":false,"duration":{"base":20,"perPsi":30,"source":"data"}},{"id":2,"tier":1,"name":"Neuro-Reflex Dampening","file":"T1_Neuro_Reflex_Dampening","benefits":false,"duration":{"base":60,"perPsi":20,"source":"data"}},{"id":3,"tier":1,"name":"Kinetic Redirection","file":"T1_Kinetic_Redirection","benefits":true,"duration":{"base":0,"perPsi":1,"source":"help"}},{"id":4,"tier":1,"name":"Psychogenic Agility","file":"T1_Psychogenic_Agility","benefits":false,"duration":{"base":120,"perPsi":60,"source":"data"}},{"id":5,"tier":1,"name":"Psychogenic Cyber-Affinity","file":"T1_Psychogenic_Cyber_Affinity","benefits":false,"duration":{"base":60,"perPsi":30,"source":"data"}},{"id":6,"tier":1,"name":"Projected Cryokinesis","file":"T1_Projected_Cryokinesis","benefits":true},{"id":7,"tier":1,"name":"Remote Electron Tampering","file":"T1_Remote_Electron_Tampering","benefits":true},{"id":9,"tier":2,"name":"Anti-Entropic Field","file":"T2_Anti_Entropic_Field","benefits":false,"duration":{"base":10,"perPsi":20,"source":"help"}},{"id":10,"tier":2,"name":"Adrenaline Overproduction","file":"T2_Adrenaline_Overproduction","benefits":false,"duration":{"base":0,"perPsi":10,"source":"data"}},{"id":11,"tier":2,"name":"Neural Decontamination","file":"T2_Neural_Decontamination","benefits":false,"duration":{"base":10,"perPsi":5,"source":"data"}},{"id":12,"tier":2,"name":"Cerebro-Stimulated Regeneration","file":"T2_Cerebro_Stimulated_Regeneration","benefits":true},{"id":13,"tier":2,"name":"Psychogenic Strength","file":"T2_Psychogenic_Strength","benefits":false,"duration":{"base":120,"perPsi":60,"source":"data"}},{"id":14,"tier":2,"name":"Recursive Psionic Amplification","file":"T2_Recursive_Psionic_Amplification","benefits":false,"duration":{"base":10,"perPsi":10,"source":"data"}},{"id":15,"tier":2,"name":"Localized Pyrokinesis","file":"T2_Localized_Pyrokinesis","benefits":false,"duration":{"base":15,"perPsi":8,"source":"data"}},{"id":17,"tier":3,"name":"Molecular Duplication","file":"T3_Molecular_Duplication","benefits":true},{"id":18,"tier":3,"name":"Electron Cascade","file":"T3_Electron_Cascade","benefits":true},{"id":19,"tier":3,"name":"Energy Reflection","file":"T3_Energy_Reflection","benefits":false,"duration":{"base":0,"perPsi":20,"source":"data"}},{"id":20,"tier":3,"name":"Neural Toxin-Blocker","file":"T3_Neural_Toxin_Blocker","benefits":false,"duration":{"base":10,"perPsi":5,"source":"data"}},{"id":21,"tier":3,"name":"Enhanced Motion Sensitivity","file":"T3_Enhanced_Motion_Sensitivity","benefits":false,"duration":{"base":0,"perPsi":30,"source":"data"}},{"id":22,"tier":3,"name":"Projected Pyrokinesis","file":"T3_Projected_Pyrokinesis","benefits":true},{"id":23,"tier":3,"name":"Psionic Hypnogenesis","file":"T3_Psionic_Hypnogenesis","benefits":true,"duration":{"base":0,"perPsi":20,"source":"help"}},{"id":25,"tier":4,"name":"Photonic Redirection","file":"T4_Photonic_Redirection","benefits":false,"duration":{"base":5,"perPsi":5,"source":"data"}},{"id":26,"tier":4,"name":"Remote Pattern Detection","file":"T4_Remote_Pattern_Detection","benefits":false,"duration":{"base":0,"perPsi":60,"source":"data"}},{"id":27,"tier":4,"name":"Electron Suppression","file":"T4_Electron_Suppression","benefits":true,"duration":{"base":0,"perPsi":3,"source":"help"}},{"id":28,"tier":4,"name":"Psychogenic Endurance","file":"T4_Psychogenic_Endurance","benefits":false,"duration":{"base":120,"perPsi":60,"source":"data"}},{"id":29,"tier":4,"name":"Molecular Transmutation","file":"T4_Molecular_Transmutation","benefits":true},{"id":30,"tier":4,"name":"Remote Circuitry Manipulation","file":"T4_Remote_Circuitry_Manipulation","benefits":true},{"id":31,"tier":4,"name":"Cerebro-Energetic Extension","file":"T4_Cerebro_Energetic_Extension","benefits":false,"duration":{"base":10,"perPsi":10,"source":"data"}},{"id":33,"tier":5,"name":"Advanced Cerebro-Stimulated Regeneration","file":"T5_Advanced_Cerebro_Stimulated_Regeneration","benefits":true},{"id":34,"tier":5,"name":"Soma Transference","file":"T5_Soma_Transference","benefits":true},{"id":35,"tier":5,"name":"Instantaneous Quantum Relocation","file":"T5_Instantaneous_Quantum_Relocation","benefits":false},{"id":36,"tier":5,"name":"Imposed Neural Restructuring","file":"T5_Imposed_Neural_Restructuring","benefits":true,"duration":{"base":0,"perPsi":10,"source":"help"}},{"id":37,"tier":5,"name":"Metacreative Barrier","file":"T5_Metacreative_Barrier","benefits":true,"duration":{"base":240,"perPsi":0,"source":"help"}},{"id":38,"tier":5,"name":"External Psionic Detonation","file":"T5_External_Psionic_Detonation","benefits":false,"duration":{"base":240,"perPsi":0,"source":"help"}},{"id":39,"tier":5,"name":"Psycho-Reflective Aura","file":"T5_Psycho_Reflective_Aura","benefits":false,"duration":{"base":10,"perPsi":20,"source":"data"}}];
 const REFIRE_MS = 500;
 const byId = new Map(DISCIPLINES.map(d => [d.id, d]));
 const $ = id => document.getElementById(id);
@@ -243,6 +244,13 @@ function renderSteps() {
     tag.className = "tag" + (willOverload ? " over" : "");
     tag.textContent = cast.mode === "q" ? "quickfire" : (d.benefits ? "overload" : "immediate (no overload benefit)");
     what.append(name, " ", tag);
+    const lasts = durationText(d, cast.mode);
+    if (lasts) {
+      const line = document.createElement("div");
+      line.className = "hint";
+      line.textContent = lasts;
+      what.appendChild(line);
+    }
     li.append(
       what,
       makeButton("Up", "Move " + d.name + " earlier", () => { move(i, -1); }, i === 0),
@@ -254,6 +262,28 @@ function renderSteps() {
 
   $("armMissing").hidden = state.arm;
   $("noCasts").hidden = state.casts.length > 0;
+}
+
+function formatSeconds(total) {
+  const min = Math.floor(total / 60);
+  const sec = total % 60;
+  if (min === 0) return sec + " s";
+  return sec === 0 ? min + " min" : min + " min " + sec + " s";
+}
+
+// "Lasts 60 s + 30 s × PSI. Max 5 min (at PSI 8)." Empty when the discipline has no duration.
+function durationText(d, mode) {
+  if (!d.duration) return "";
+  const { base, perPsi, source } = d.duration;
+  const from = source === "help" ? " (from the in-game help text)" : "";
+  if (perPsi === 0) return "Lasts " + formatSeconds(base) + ", whatever your PSI" + from + ".";
+  const equation = base === 0
+    ? formatSeconds(perPsi) + " × PSI"
+    : formatSeconds(base) + " + " + formatSeconds(perPsi) + " × PSI";
+  const overloaded = mode === "o" && d.benefits;
+  const maxPsi = overloaded ? 10 : 8;
+  return "Lasts " + equation + ". Max " + formatSeconds(base + perPsi * maxPsi)
+    + " (at PSI " + maxPsi + (overloaded ? ", overloaded" : "") + ")" + from + ".";
 }
 
 function move(i, delta) {
