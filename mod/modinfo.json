@@ -1,6 +1,6 @@
 {
 	"title": "psi_autocast",
-	"version": "1.0",
+	"version": "1.1",
 	"description": "One-key psi casting. A bound key draws the psi amp, selects a discipline and casts it - immediately (Quickfire scripts) or overloaded when the discipline benefits, timed from the game's overload table for its tier and your PSI. Scripts for all 35 disciplines are in the psi folder.",
 	"author": "feygon",
 	"requirements": []
