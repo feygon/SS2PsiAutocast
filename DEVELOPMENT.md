@@ -108,6 +108,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 - **The game's scripts** are inside `mods\sshock2ee.kpf` under `sq_scripts/`. `libs/` and `debug/` load in the order given by `squirrel.ini`; top-level `.nut` files load automatically.
 - **The remaster's player script** logs `OnOverloadSuccess` when the player gets an `OverloadSuccess` message. The player's four script slots are all taken, so a script of your own can't be added there. Instead, use `ND.g_PlayerCore.Subscribe(listener, "OverloadSuccess")` with a plain class instance that has an `OnOverloadSuccess(message)` method. The dev probe does this.
 - **Script compile errors** show up only in the console or log, at load time, as `[darkscript] kpf:/mods/…nut line = (N) column = (M) : error …`. A file that fails to compile defines nothing, so `summon_obj` for its objects fails silently. After a script change, run `condump` and search for `error`.
+- **Never call `Debug.Command("run …")` from `OnBeginScript`.** An object summoned by a `.cmd` file starts while that file is still being read, and a `run` at that moment re-enters the outer file. That re-summoned the chain endlessly, until the game reported `Native stack overflow`. Start work from a short timer instead. `PsiCast` and `PsiChain` both do.
 - **`base` is a Squirrel keyword** (the parent class), so it can't be used as a variable name.
 
 **Commands found in `help` / `dump_cmds`:**

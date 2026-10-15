@@ -200,7 +200,9 @@ class PsiChain extends SqRootScript {
 		SetData("Index", 0);
 		SetData("GapMs", gapMs);
 		Say(steps.len() + " casts, " + gapMs + "ms between them");
-		StartStep();
+		// Never run commands from OnBeginScript: it runs while the chain's .cmd file is still being
+		// read, and a run from here re-enters that file (endless PsiChain creation, stack overflow).
+		SetOneShotTimer("ChainStart", 0.01);
 	}
 
 	function StepName(index) {
@@ -218,7 +220,10 @@ class PsiChain extends SqRootScript {
 
 	function OnTimer() {
 		local name = message().name;
-		if (name == "ChainPoll") {
+		if (name == "ChainStart") {
+			StartStep();
+		}
+		else if (name == "ChainPoll") {
 			if (ND.psiCastsReleased > GetData("ReleasedBefore")) {
 				SetOneShotTimer("ChainNext", GetData("GapMs") / 1000.0);
 				return;
