@@ -98,14 +98,19 @@ class PsiCast extends SqRootScript {
 	}
 
 	function OnBeginScript() {
-		local power = CfgInt("psi_power", 0);
-		local slot = CfgInt("psi_slot", 6);
-		local mode = CfgInt("psi_mode", 0);
-		local benefits = CfgInt("psi_benefits", 0) != 0;
-		local name = CfgText("psi_name", power > 0 ? "discipline " + power : "quick slot " + slot);
+		// A chain passes its settings directly (ND.psiPendingCast) and creates this object itself.
+		// Otherwise the settings come from config values set by a key file.
+		local pending = ND.psiPendingCast;
+		ND.psiPendingCast = null;
+
+		local power = pending ? pending.power : CfgInt("psi_power", 0);
+		local slot = pending ? 0 : CfgInt("psi_slot", 6);
+		local mode = pending ? pending.mode : CfgInt("psi_mode", 0);
+		local benefits = pending ? pending.benefits : CfgInt("psi_benefits", 0) != 0;
+		local name = pending ? pending.name : CfgText("psi_name", power > 0 ? "discipline " + power : "quick slot " + slot);
 
 		local impliedTier = power > 0 ? power / 8 + 1 : 0;
-		local tier = CfgInt("psi_tier", impliedTier > 0 ? impliedTier : 1);
+		local tier = pending ? impliedTier : CfgInt("psi_tier", impliedTier > 0 ? impliedTier : 1);
 		if (impliedTier > 0 && impliedTier != tier) {
 			Say(name + ": psi_tier " + tier + " doesn't match discipline " + power + " (tier " + impliedTier + "), using tier " + impliedTier);
 			tier = impliedTier;
@@ -118,7 +123,8 @@ class PsiCast extends SqRootScript {
 		if (power > 0 && !SeemsLearned(power))
 			Say(name + ": warning - this discipline may not be learned yet");
 
-		local waitMs = PsiAmpInHand() ? 10 : CfgInt("psi_draw_ms", 800);
+		// Chain casts only start with the amp in hand, so they never wait for a draw.
+		local waitMs = PsiAmpInHand() || pending ? 10 : CfgInt("psi_draw_ms", 800);
 
 		SetData("Power", power);
 		SetData("Slot", slot);
@@ -155,6 +161,11 @@ class PsiCast extends SqRootScript {
 
 // Counts finished casts, so a chain can tell when its current step has released.
 ND.psiCastsReleased <- 0;
+
+// Settings a chain hands to the PsiCast it creates: { power, mode, benefits, name }.
+// Passed directly rather than through console "set" commands, which a script's Debug.Command
+// only queues: they ran over several frames, and the summon after them never took effect.
+ND.psiPendingCast <- null;
 
 // Raised by PsiCancel. Each running PsiCast and PsiChain remembers its value at the start
 // and stops at its next timer if it has changed.
@@ -391,13 +402,13 @@ class PsiChain extends SqRootScript {
 				return Stop(label + "the psi amp isn't in hand (add an arm step first)");
 			local discipline = ND.psiDisciplines[power];
 			Say(label + discipline.name + (quickfire ? " (quickfire)" : " (overload if it helps)"));
-			Debug.Command("set psi_name " + discipline.name + (quickfire ? "_Quickfire" : ""));
-			Debug.Command("set psi_power " + power);
-			Debug.Command("set psi_slot 0");
-			Debug.Command("set psi_benefits " + discipline.benefits);
-			Debug.Command("set psi_tier " + (power / 8 + 1));
-			Debug.Command("set psi_mode " + (quickfire ? 0 : 1));
-			Debug.Command("summon_obj PsiCast");
+			ND.psiPendingCast = {
+				power = power,
+				mode = quickfire ? 0 : 1,
+				benefits = discipline.benefits != 0,
+				name = discipline.name + (quickfire ? "_Quickfire" : "")
+			};
+			Object.Create("PsiCast");
 		}
 		else {
 			Say(label + step);
