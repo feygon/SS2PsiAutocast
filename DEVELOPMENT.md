@@ -66,6 +66,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Floats 8–12:** bar fill time in seconds for tiers 1–5: 2.0 1.5 1.0 0.75 0.4.
   - **Floats 13–15:** 0.85 0.82 0.78, meaning unknown (burnout-related?).
   - **Validated by testing:** tier 1 at PSI 4 (zone 1460–2000 ms, matched); tier 2 burnout just after 1500 ms, at PSI 4 and 5.
+- **Psi amp refire:** its `BaseGunDesc` setting 0 has **Shot Interval = 500 ms**, which is the minimum time between casts. The remaster's `shoot` viewmodel animation (30 fps, 60 frames) is cosmetic and doesn't limit firing.
 - **Reading game data files:** a `.gam` file is a Dark tag file. The first uint32 is the table-of-contents offset. The table of contents is a uint32 count followed by 20-byte entries (12-byte name, offset, size). Each chunk starts with a 24-byte header. Property chunks (`P$…`) are records of int32 object id, uint32 size, then the data.
 - **Learned disciplines:** `PsiPowerDesc` / `PsiPower2Desc` on the player are probably bit sets of learned disciplines (ids 0–31 and 32–39). Unverified, so the script only warns.
 
@@ -121,10 +122,9 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 - **Tested in game (v1.1, 2026-10-14, PSI 4):**
   - **`ShockGame.SetSelectedPsiPower(id)`** selects the discipline that the next `fire_weapon` casts. Kinetic Redirection was selected and the pistol was in hand; the key drew the amp, switched to Cryokinesis and overloaded it.
   - **Nested `run`** works: key files calling `run psi\lib\…` apply every part.
-  - **Chains (v1.2):** Localized Pyrokinesis (immediate), then Projected Cryokinesis (`OnOverloadSuccess`), from the pistol with a 700 ms gap.
+  - **Chains (v1.2):** Localized Pyrokinesis (immediate), then Projected Cryokinesis (`OnOverloadSuccess`), from the pistol, with 700 ms and 500 ms gaps.
   - **Conditional overload:** tier 1 held 1564 ms, giving `OnOverloadSuccess`. The tier 2 no-benefit discipline cast immediately, with the console explanation.
 - **Still untested:**
-  - **The shortest working chain gap.** 700 ms works; shorter values are untried.
   - **Effective versus base PSI** for the zone lookup. They were equal during testing.
   - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.

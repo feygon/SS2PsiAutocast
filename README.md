@@ -127,7 +127,7 @@ A chain script casts several disciplines in a row. Put chains in `psi\chains\`:
 
 ```
 set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis
-set psi_chain_gap_ms 700
+set psi_chain_gap_ms 500
 summon_obj PsiChain
 ```
 
@@ -136,7 +136,7 @@ Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
 - **`psi_chain`** lists discipline script names from the [table below](#discipline-scripts), without `.cmd`, separated by commas, with no spaces.
 - **Each step follows its own script:** the plain name overloads when the discipline benefits, and the `_Quickfire` name casts immediately.
 - **The first step draws the amp if needed.** Later steps find it already in hand.
-- **`psi_chain_gap_ms`** is the pause after each cast releases, before the next one starts.
+- **`psi_chain_gap_ms`** is the pause after each cast releases, before the next one starts. 500 ms matches the psi amp's refire limit (its `Shot Interval` in the game data). Lower values can swallow the next cast.
 - **The console reports** each step (`chain: step 2/3: …`) and then `chain: done`. A step that never releases within 5 seconds stops the chain.
 - **Don't fire or switch weapons while a chain runs.** Your input would mix with the chain's own.
 

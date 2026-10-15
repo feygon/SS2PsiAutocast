@@ -147,7 +147,7 @@ ND.psiCastsReleased <- 0;
 
 // PsiChain: casts several disciplines in a row from one key.
 //   set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis   discipline scripts in psi\, comma-separated
-//   set psi_chain_gap_ms 700                                          pause after each release before the next cast
+//   set psi_chain_gap_ms 500                                          pause after each release (psi amp Shot Interval)
 //   summon_obj PsiChain
 // Each step runs its discipline script, so it draws, quickfires or overloads by that script's own rules.
 const PSI_CHAIN_POLL_S = 0.05;
@@ -189,7 +189,7 @@ class PsiChain extends SqRootScript {
 		}
 
 		local gap = int_ref();
-		local gapMs = 700;
+		local gapMs = 500;
 		if (Engine.ConfigIsDefined("psi_chain_gap_ms")) {
 			Engine.ConfigGetInt("psi_chain_gap_ms", gap);
 			gapMs = gap.tointeger();
