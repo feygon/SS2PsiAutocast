@@ -35,6 +35,40 @@ function PsiAmpInHand() {
 	return weapon != 0 && Object.InheritsFrom(weapon, Object.Named("Psi Amp"));
 }
 
+// "Previous weapon": the weapon in hand just before a macro drew the amp. The game's own
+// last_weapon doesn't count an equip_weapon switch, so it went one weapon further back (the
+// wrench instead of the pistol). This uses the save-and-restore pattern of the game's cutscene
+// code instead: remember ShockGame.Equipped(0), later ShockGame.Equip(0, it).
+ND.psiWeaponBeforeArm <- 0;
+
+function PsiRememberWeapon() {
+	local weapon = ShockGame.Equipped(0);
+	if (weapon != 0 && !PsiAmpInHand())
+		ND.psiWeaponBeforeArm = weapon;
+}
+
+function PsiSwitchToRememberedWeapon() {
+	local weapon = ND.psiWeaponBeforeArm;
+	if (weapon == 0 || !Object.Exists(weapon))
+		return "previous weapon: no weapon remembered (no macro has drawn the amp yet)";
+	ShockGame.Equip(0, weapon);
+	return "switch back to the previous weapon (" + ShockGame.GetArchetypeName(weapon) + ")";
+}
+
+// PsiPreviousWeapon: the standalone "switch back to previous weapon" (psi\actions\Switch_To_Previous_Weapon.cmd).
+class PsiPreviousWeapon extends SqRootScript {
+	function OnBeginScript() {
+		SetOneShotTimer("Switch", 0.01);
+	}
+
+	function OnTimer() {
+		if (message().name != "Switch")
+			return;
+		print("[psi_autocast] " + PsiSwitchToRememberedWeapon());
+		Object.Destroy(self);
+	}
+}
+
 class PsiCast extends SqRootScript {
 	function CfgInt(name, fallback) {
 		if (!Engine.ConfigIsDefined(name))
@@ -125,6 +159,9 @@ class PsiCast extends SqRootScript {
 
 		// Chain casts only start with the amp in hand, so they never wait for a draw.
 		local waitMs = PsiAmpInHand() || pending ? 10 : CfgInt("psi_draw_ms", 800);
+		// A key file is about to draw the amp: remember what was in hand, for "previous weapon".
+		if (!pending)
+			PsiRememberWeapon();
 
 		SetData("Power", power);
 		SetData("Slot", slot);
@@ -200,7 +237,7 @@ class PsiCancel extends SqRootScript {
 //   <id>q    cast discipline <id> immediately (quickfire)
 //   w<ms>    wait <ms> milliseconds
 //   hypo     use a psi hypo (runs psi\actions\Use_Psi_Hypo.cmd)
-//   last     switch back to the previous weapon (last_weapon)
+//   last     switch back to the weapon held before the amp was drawn (PsiSwitchToRememberedWeapon)
 //   weapon:<Name>  switch weapon by running psi\actions\Switch_To_<Name>.cmd (weapon:Assault_Rifle)
 // Steps whose commands take multi-word arguments run action files: Debug.Command goes through the
 // console, which splits at spaces, so "equip_weapon psi amp" sent directly becomes "equip_weapon psi".
@@ -339,6 +376,7 @@ class PsiChain extends SqRootScript {
 			else {
 				local drawMs = CfgInt("psi_draw_ms", 800);
 				Say(label + "arm - drawing the psi amp, waiting " + drawMs + "ms");
+				PsiRememberWeapon();
 				Debug.Command("run psi\\actions\\Arm_Psi_Amp.cmd");
 				SetOneShotTimer("ChainNext", drawMs / 1000.0);
 			}
@@ -353,8 +391,7 @@ class PsiChain extends SqRootScript {
 		}
 
 		if (step == "last") {
-			Say(label + "switch back to the previous weapon");
-			Debug.Command("last_weapon");
+			Say(label + PsiSwitchToRememberedWeapon());
 			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
@@ -454,3 +491,4 @@ class PsiChain extends SqRootScript {
 ND.Archetype("PsiCast", "ND", function(){ AddScript("PsiCast"); });
 ND.Archetype("PsiChain", "ND", function(){ AddScript("PsiChain"); });
 ND.Archetype("PsiCancel", "ND", function(){ AddScript("PsiCancel"); });
+ND.Archetype("PsiPreviousWeapon", "ND", function(){ AddScript("PsiPreviousWeapon"); });

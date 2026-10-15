@@ -1,1 +1,1 @@
-last_weapon
+summon_obj PsiPreviousWeapon

@@ -168,7 +168,8 @@ def write_actions():
     write(ACTIONS_DIR / "Arm_Psi_Amp.cmd", ["equip_weapon psi amp"])
     write(ACTIONS_DIR / "Use_Psi_Hypo.cmd", ["use_obj psi booster"])
     write(ACTIONS_DIR / "Cancel_Macro.cmd", ["summon_obj PsiCancel"])
-    write(ACTIONS_DIR / "Switch_To_Previous_Weapon.cmd", ["last_weapon"])
+    # Not last_weapon: that skipped back past the weapon held before the macro drew the amp.
+    write(ACTIONS_DIR / "Switch_To_Previous_Weapon.cmd", ["summon_obj PsiPreviousWeapon"])
     for display, name in WEAPONS:
         write(ACTIONS_DIR / f"Switch_To_{display.replace(' ', '_')}.cmd", [f"equip_weapon {name}"])
 
