@@ -167,8 +167,7 @@ ND.psiCastsReleased <- 0;
 const PSI_CHAIN_POLL_S = 0.05;
 const PSI_CHAIN_TIMEOUT_MS = 5000;  // longest a cast may take before the chain gives up
 const PSI_REFIRE_MS = 500;          // the psi amp's Shot Interval
-const PSI_HYPO_RESTORE = 24;        // psi a hypo restores: 20 (SCP), 24 with Pharmo-Friendly; 24 never wastes one
-// set psi_auto_hypo 1            before each cast, use a psi hypo if psi points <= max - PSI_HYPO_RESTORE
+// set psi_auto_hypo 1            before each cast, use a psi hypo if psi points <= max - PsiHypoRestore()
 // set psi_auto_hypo_wait_ms 500  pause after an auto hypo before the cast
 
 // Splits "a,b, c" into ["a", "b", "c"], skipping empty entries.
@@ -188,6 +187,15 @@ function PsiSplitList(text) {
 	if (current.len() > 0)
 		items.push(current);
 	return items;
+}
+
+// Psi points a hypo restores: 30 on Easy (Difficulty 1), 20 on Normal, Hard and Impossible,
+// plus 20% with the Pharmo-Friendly O/S upgrade (36 / 24). Difficulty and trait are read the way SCP reads them.
+function PsiHypoRestore() {
+	local restore = Quest.Get("Difficulty") == 1 ? 30 : 20;
+	if (ShockGame.HasTrait("Player", eTrait.kTraitPharmo))
+		restore = (restore * 1.2).tointeger();
+	return restore;
 }
 
 // "assault_rifle" -> "assault rifle" (chain steps can't contain spaces).
@@ -259,7 +267,7 @@ class PsiChain extends SqRootScript {
 	}
 
 	// True when psi_auto_hypo is on, this step casts, it hasn't already had its hypo,
-	// and psi points are at or below max - PSI_HYPO_RESTORE.
+	// and psi points are at or below max minus what a hypo restores.
 	function AutoHypoDue(index) {
 		if (CfgInt("psi_auto_hypo", 0) == 0 || GetData("AutoHypoFor") == index)
 			return false;
@@ -267,7 +275,7 @@ class PsiChain extends SqRootScript {
 		if (step == "arm" || step == "hypo" || step == "last" || IsWaitStep(step)
 			|| (step.len() > 7 && step.slice(0, 7) == "weapon:"))
 			return false;
-		return ShockGame.GetPlayerPsiPoints() <= ShockGame.GetPlayerMaxPsiPoints() - PSI_HYPO_RESTORE;
+		return ShockGame.GetPlayerPsiPoints() <= ShockGame.GetPlayerMaxPsiPoints() - PsiHypoRestore();
 	}
 
 	function Stop(reason) {
@@ -328,8 +336,11 @@ class PsiChain extends SqRootScript {
 			local points = ShockGame.GetPlayerPsiPoints();
 			local maxPoints = ShockGame.GetPlayerMaxPsiPoints();
 			local waitMs = CfgInt("psi_auto_hypo_wait_ms", PSI_REFIRE_MS);
-			Say(label + "psi " + points + "/" + maxPoints + " is at or below " + (maxPoints - PSI_HYPO_RESTORE)
-				+ " (max - " + PSI_HYPO_RESTORE + "), using a psi hypo first, then waiting " + waitMs + "ms");
+			local restore = PsiHypoRestore();
+			Say(label + "psi " + points + "/" + maxPoints + " is at or below " + (maxPoints - restore)
+				+ " (max - " + restore + ", what a hypo restores on this difficulty"
+				+ (ShockGame.HasTrait("Player", eTrait.kTraitPharmo) ? " with Pharmo-Friendly" : "")
+				+ "), using a psi hypo first, then waiting " + waitMs + "ms");
 			Debug.Command("use_obj psi booster");
 			SetData("AutoHypoFor", index);
 			SetOneShotTimer("ChainRetry", waitMs / 1000.0);

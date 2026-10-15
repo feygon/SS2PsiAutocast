@@ -109,7 +109,7 @@ summon_obj PsiChain
 | `psi_draw_ms` | ms | Wait for the amp to come up when it isn't already in hand. 800 is reliable from the pistol |
 | `psi_chain` | comma-separated names | Chain steps |
 | `psi_chain_gap_ms` | ms, at least 500 | Pause after each release in a chain |
-| `psi_auto_hypo` | 0 or 1 | Before each cast in a chain, use a psi hypo if psi points are at or below max − 24 (a hypo restores 20, or 24 with Pharmo-Friendly). Always set it, to 0 or 1, because it carries over between macros. Untested in game |
+| `psi_auto_hypo` | 0 or 1 | Before each cast in a chain, use a psi hypo if psi points are at or below max minus what a hypo restores. The mod works this out from `Quest.Get("Difficulty")` (1 = Easy: 30, otherwise 20) and the Pharmo-Friendly trait (× 1.2), giving 36 or 24. Always set it, to 0 or 1, because it carries over between macros. Untested in game |
 | `psi_auto_hypo_wait_ms` | ms | Pause after an auto hypo before the cast (default 500) |
 
 ## Overload timing
