@@ -22,6 +22,7 @@
 const PSI_QUICKFIRE_MS = 100;
 const PSI_SAFETY_MS = 50;           // minimum distance kept from both edges of the overload zone
 const PSI_ZONE_AIM = 0.1;           // aim this far into the zone, as a fraction of its width
+const PSI_VISIBLE_MS = 50;          // extra hold so the bar is visibly in the yellow before release
 
 // Bar fill time in seconds, tiers 1-5.
 PSI_BAR_SECONDS <- [2.0, 1.5, 1.0, 0.75, 0.4];
@@ -81,7 +82,7 @@ class PsiCast extends SqRootScript {
 		}
 
 		local aimMs = (PSI_ZONE_AIM * (barMs - startMs)).tointeger();
-		local holdMs = startMs + (aimMs > PSI_SAFETY_MS ? aimMs : PSI_SAFETY_MS);
+		local holdMs = startMs + (aimMs > PSI_SAFETY_MS ? aimMs : PSI_SAFETY_MS) + PSI_VISIBLE_MS;
 		if (holdMs > barMs - PSI_SAFETY_MS) {
 			Say(name + ": overload zone too narrow to hit safely, casting immediately (" + basis + ")");
 			return PSI_QUICKFIRE_MS;
