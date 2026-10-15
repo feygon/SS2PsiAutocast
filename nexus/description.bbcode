@@ -1,0 +1,37 @@
+[size=5][b]psi_autocast: one-key psi casting[/b][/size]
+
+Press one key: your character draws the psi amp, selects the discipline and casts it. No F-key cycling, no clicking, no overload-bar timing.
+
+[size=4][b]Features[/b][/size]
+[list]
+[*][b]Works from any weapon.[/b] The key draws the amp, waits for it to come up, then casts. With the amp already out, it casts immediately.
+[*][b]Scripts for all 35 disciplines[/b], two per discipline:
+[list]
+[*][b]Quickfire[/b] ([i]T1_Projected_Cryokinesis_Quickfire[/i]): casts immediately.
+[*][b]Conditional overload[/b] ([i]T1_Projected_Cryokinesis[/i]): overloads when the discipline benefits from it, otherwise casts immediately and says why.
+[/list]
+[*][b]Overload timing from the game's own data.[/b] The release time is worked out on every cast from the discipline's tier and your current PSI, using the game's Overload Params table. It adapts as your PSI rises.
+[*][b]Chains:[/b] one key can cast several disciplines in a row, each following its own quickfire or overload rule.
+[*][b]Console feedback:[/b] every cast reports its tier, your pre-overload PSI, the overload zone and its decision.
+[/list]
+
+[size=4][b]Requirements[/b][/size]
+[list]
+[*]System Shock 2: 25th Anniversary Remaster on PC. Tested on the Epic version, game version 1.3.4984.
+[*]Won't work on the classic 1999 version.
+[*]Tested alongside the remaster's bundled mods (SCP beta 6, SHTUP, Four Hundred, patch_ext). Multiplayer is untested.
+[/list]
+
+[size=4][b]Installation[/b][/size]
+[list=1]
+[*]Extract the zip into the game's install folder (the one containing SystemShock2Remastered.exe). This creates [i]mods\psi_autocast.kpf[/i] and a [i]psi[/i] folder of scripts.
+[*]New Game → Mods → add [b]psi_autocast[/b] → Apply → start. Once the first level loads, load your own save, then make a regular save. [b]Don't use mod_apply mid-game[/b]: it can unload the level.
+[*]Close the game, open [i]%USERPROFILE%\Saved Games\Nightdive Studios\System Shock 2 Remastered\user.bnd[/i] in Notepad, and add one line per key, for example:
+[code]bind g "run psi\T1_Projected_Cryokinesis_Quickfire.cmd"
+bind j "run psi\T1_Projected_Cryokinesis.cmd"[/code]
+[/list]
+
+The included readme lists every script, how the overload timing is calculated, how to build your own scripts and chains, and a troubleshooting table.
+
+[size=4][b]Source and license[/b][/size]
+MIT licensed. Source and developer notes: [url=https://github.com/feygon/SS2PsiAutocast]github.com/feygon/SS2PsiAutocast[/url]
