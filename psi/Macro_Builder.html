@@ -69,9 +69,20 @@
   <h1>psi_autocast Macro Builder</h1>
   <p>Build a one-key psi macro for <b>System Shock 2: 25th Anniversary Remaster</b> with the psi_autocast mod. Add casts in the order you want them. The builder puts the right waits between them, then gives you the macro file and the key binding line.</p>
   <p class="hint">Works offline. Nothing you enter leaves this page.</p>
+  <p class="hint">Macros are built from the game's console commands. The System Shock wiki's <a href="https://shodan.fandom.com/wiki/Commands_(System_Shock_2)" target="_blank" rel="noopener">command console page</a> is incomplete: several commands this mod uses aren't listed there. The only complete source is a dump from the game itself. Open the console (Ctrl+;), type <code>help</code> and then <code>dump_cmds</code>, then <code>condump</code> to save the list to <code>condump.txt</code> in the game folder.</p>
+
+  <section class="card" aria-labelledby="config-h">
+    <h2 id="config-h">1. Settings</h2>
+    <p class="hint">These apply to the whole macro, including steps you've already added.</p>
+    <label class="radio" style="display:flex"><input id="autoHypo" type="checkbox"> Auto psi hypo before every cast <span id="configStatus" class="status ok" aria-live="polite"></span></label>
+    <p class="hint">Before each cast, uses a psi hypo if your psi points are at or below your maximum minus what a hypo restores, then waits 500 ms, so none is wasted. A hypo restores 30 on Easy and 20 on Normal, Hard and Impossible, plus 20% with the Pharmo-Friendly O/S upgrade (36 or 24). The mod reads your difficulty and upgrades itself. Not yet tested in the game.</p>
+    <label for="drawMs">Amp draw wait (ms)</label>
+    <input id="drawMs" type="number" min="300" step="50" value="800">
+    <div id="settingsHint" class="hint">How long the Arm psi amp step waits for the amp to come up. 800 ms has been tested switching from the pistol. Other weapons haven't been tested.</div>
+  </section>
 
   <section class="card" aria-labelledby="add-h">
-    <h2 id="add-h">1. Add steps</h2>
+    <h2 id="add-h">2. Add steps</h2>
     <label id="disciplineLabel">Discipline</label>
     <div class="combo">
       <div id="discipline" role="combobox" tabindex="0" aria-haspopup="listbox" aria-expanded="false"
@@ -94,9 +105,7 @@
 
     <h2>Other steps</h2>
     <p><button id="addHypo" type="button">Add psi hypo</button>
-      <span class="hint">Uses one psi hypo from your inventory. It can go anywhere in the macro.</span></p>
-    <label class="radio" style="display:flex"><input id="autoHypo" type="checkbox"> Auto psi hypo before casts</label>
-    <p class="hint">Before each cast, uses a psi hypo if your psi points are at or below your maximum minus what a hypo restores, then waits 500 ms, so none is wasted. A hypo restores 30 on Easy and 20 on Normal, Hard and Impossible, plus 20% with the Pharmo-Friendly O/S upgrade (36 or 24). The mod reads your difficulty and upgrades itself.</p>
+      <span class="hint">Uses one psi hypo from your inventory. It can go anywhere in the macro. You can also turn on an automatic psi hypo check before every cast, up in <a href="#config-h">Settings</a>.</span></p>
     <label for="finalWeapon">Finish with a weapon switch <span class="hint">(always the last step)</span></label>
     <div class="row">
       <select id="finalWeapon" style="width:auto"></select>
@@ -108,7 +117,7 @@
   </section>
 
   <section class="card" aria-labelledby="steps-h">
-    <h2 id="steps-h">2. Steps, in order</h2>
+    <h2 id="steps-h">3. Steps, in order</h2>
     <ol id="steps" class="steps"></ol>
     <p id="armMissing" class="warn" hidden>No arm step: this macro only works when the psi amp is already in your hands. If it isn't, the chain stops and says so in the console. <button id="addArm" type="button" class="small">Add arm step back</button></p>
     <p id="noCasts" class="hint">No steps yet. Add one above.</p>
@@ -117,26 +126,17 @@
   </section>
 
   <section class="card" aria-labelledby="settings-h">
-    <h2 id="settings-h">3. Name and key</h2>
+    <h2 id="settings-h">4. Name and key</h2>
     <label for="macroName">Macro file name <span class="hint">(letters, numbers and underscores)</span></label>
     <input id="macroName" type="text" spellcheck="false" autocomplete="off">
     <div id="nameHint" class="hint"></div>
 
-    <div class="row">
-      <div>
-        <label for="bindKey">Key to bind</label>
-        <input id="bindKey" type="text" value="v" spellcheck="false" autocomplete="off" style="width:7em">
-      </div>
-      <div>
-        <label for="drawMs">Amp draw wait (ms)</label>
-        <input id="drawMs" type="number" min="300" step="50" value="800">
-      </div>
-    </div>
-    <div id="settingsHint" class="hint">800 ms has been tested switching from the pistol. Other weapons haven't been tested.</div>
+    <label for="bindKey">Key to bind</label>
+    <input id="bindKey" type="text" value="v" spellcheck="false" autocomplete="off" style="width:7em">
   </section>
 
   <section class="card" aria-labelledby="out-h">
-    <h2 id="out-h">4. Your macro</h2>
+    <h2 id="out-h">5. Your macro</h2>
     <p id="outBlocked" class="warn" hidden></p>
     <label>File contents, saved as <code id="savePath"></code></label>
     <pre id="macroText"></pre>
@@ -665,7 +665,7 @@ $("addCast").addEventListener("click", addCast);
 $("finalWeapon").append(new Option("Previous weapon", "last"), ...WEAPONS.map(w => new Option(w.label, w.name)));
 $("addHypo").addEventListener("click", addHypo);
 $("autoHypo").addEventListener("change", () => {
-  flash($("otherStatus"), $("autoHypo").checked ? "Auto psi hypo is on." : "Auto psi hypo is off.");
+  flash($("configStatus"), $("autoHypo").checked ? "Auto psi hypo is on for every cast." : "Auto psi hypo is off.");
   renderOutput();
 });
 $("setWeapon").addEventListener("click", setFinalWeapon);
