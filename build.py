@@ -41,13 +41,18 @@ def build_kpf(include_dev=False):
     print(f"built {KPF_PATH.name}" + (" (with dev tools)" if include_dev else ""))
 
 
+def player_files():
+    """Key scripts, parts, chains and the macro builder page."""
+    return sorted(p for p in KEYS_SOURCE.rglob("*") if p.suffix in (".cmd", ".html"))
+
+
 def package_release():
     """Lay the zip out like the game folder, so players can extract it straight in."""
     release = DIST_DIR / f"psi_autocast_v{mod_version()}.zip"
     with zipfile.ZipFile(release, "w", zipfile.ZIP_DEFLATED) as package:
         package.write(KPF_PATH, f"mods/{KPF_PATH.name}")
-        for cmd in sorted(KEYS_SOURCE.rglob("*.cmd")):
-            package.write(cmd, "psi/" + cmd.relative_to(KEYS_SOURCE).as_posix())
+        for item in player_files():
+            package.write(item, "psi/" + item.relative_to(KEYS_SOURCE).as_posix())
         for doc in RELEASE_DOCS:
             package.write(PROJECT_DIR / doc, f"psi/psi_autocast_{doc}")
     print(f"packaged {release.name}")
@@ -66,10 +71,10 @@ def game_is_running():
 
 def install():
     keys_target = GAME_DIR / "psi"
-    for cmd in sorted(KEYS_SOURCE.rglob("*.cmd")):
-        target = keys_target / cmd.relative_to(KEYS_SOURCE)
+    for item in player_files():
+        target = keys_target / item.relative_to(KEYS_SOURCE)
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(cmd, target)
+        shutil.copy2(item, target)
     print(f"copied key files to {keys_target}")
 
     if game_is_running():

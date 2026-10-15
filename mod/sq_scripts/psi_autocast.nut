@@ -29,6 +29,12 @@ PSI_BAR_SECONDS <- [2.0, 1.5, 1.0, 0.75, 0.4];
 // Overload zone start as a fraction of the bar, pre-overload PSI 1-8.
 PSI_ZONE_START <- [1.0, 0.94, 0.85, 0.73, 0.58, 0.4, 0.19, 0.01];
 
+// True when the psi amp is the weapon in hand.
+function PsiAmpInHand() {
+	local weapon = ShockGame.Equipped(0);
+	return weapon != 0 && Object.InheritsFrom(weapon, Object.Named("Psi Amp"));
+}
+
 class PsiCast extends SqRootScript {
 	function CfgInt(name, fallback) {
 		if (!Engine.ConfigIsDefined(name))
@@ -112,9 +118,7 @@ class PsiCast extends SqRootScript {
 		if (power > 0 && !SeemsLearned(power))
 			Say(name + ": warning - this discipline may not be learned yet");
 
-		local weapon = ShockGame.Equipped(0);
-		local ampInHand = weapon != 0 && Object.InheritsFrom(weapon, Object.Named("Psi Amp"));
-		local waitMs = ampInHand ? 10 : CfgInt("psi_draw_ms", 800);
+		local waitMs = PsiAmpInHand() ? 10 : CfgInt("psi_draw_ms", 800);
 
 		SetData("Power", power);
 		SetData("Slot", slot);
@@ -145,13 +149,21 @@ class PsiCast extends SqRootScript {
 // Counts finished casts, so a chain can tell when its current step has released.
 ND.psiCastsReleased <- 0;
 
-// PsiChain: casts several disciplines in a row from one key.
-//   set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis   discipline scripts in psi\, comma-separated
-//   set psi_chain_gap_ms 500                                          pause after each release (psi amp Shot Interval)
+// PsiChain: runs several steps in a row from one key.
+//   set psi_chain arm,6o,w500,15q
+//   set psi_draw_ms 800        how long the arm step waits for the amp to come up
+//   set psi_chain_gap_ms 500   default pause after a cast when no wait step follows it
 //   summon_obj PsiChain
-// Each step runs its discipline script, so it draws, quickfires or overloads by that script's own rules.
+// Steps, comma-separated:
+//   arm      draw the psi amp if it isn't in hand, then wait psi_draw_ms
+//   <id>o    cast discipline <id>, overloading if it benefits (conditional overload)
+//   <id>q    cast discipline <id> immediately (quickfire)
+//   w<ms>    wait <ms> milliseconds
+//   <name>   run psi\<name>.cmd (a discipline script, which draws the amp itself)
+// Inline casts (<id>o / <id>q) never draw the amp: without an arm step the amp must already be in hand.
 const PSI_CHAIN_POLL_S = 0.05;
-const PSI_CHAIN_TIMEOUT_MS = 5000;  // longest a step may take before the chain gives up
+const PSI_CHAIN_TIMEOUT_MS = 5000;  // longest a cast may take before the chain gives up
+const PSI_REFIRE_MS = 500;          // the psi amp's Shot Interval
 
 // Splits "a,b, c" into ["a", "b", "c"], skipping empty entries.
 function PsiSplitList(text) {
@@ -159,7 +171,7 @@ function PsiSplitList(text) {
 	local current = "";
 	foreach (ch in text) {
 		local c = ch.tochar();
-		if (c == "," || c == " " || c == "	") {
+		if (c == "," || c == " " || c == "\t") {
 			if (current.len() > 0)
 				items.push(current);
 			current = "";
@@ -172,9 +184,27 @@ function PsiSplitList(text) {
 	return items;
 }
 
+function PsiIsDigits(text) {
+	if (text.len() == 0)
+		return false;
+	foreach (ch in text) {
+		if (ch < '0' || ch > '9')
+			return false;
+	}
+	return true;
+}
+
 class PsiChain extends SqRootScript {
 	function Say(text) {
 		print("[psi_autocast] chain: " + text);
+	}
+
+	function CfgInt(name, fallback) {
+		if (!Engine.ConfigIsDefined(name))
+			return fallback;
+		local value = int_ref();
+		Engine.ConfigGetInt(name, value);
+		return value.tointeger();
 	}
 
 	function OnBeginScript() {
@@ -183,38 +213,91 @@ class PsiChain extends SqRootScript {
 			Engine.ConfigGetRaw("psi_chain", list);
 		local steps = PsiSplitList(list.tostring());
 		if (steps.len() == 0) {
-			Say("psi_chain is empty, nothing to cast");
+			Say("psi_chain is empty, nothing to do");
 			Object.Destroy(self);
 			return;
-		}
-
-		local gap = int_ref();
-		local gapMs = 500;
-		if (Engine.ConfigIsDefined("psi_chain_gap_ms")) {
-			Engine.ConfigGetInt("psi_chain_gap_ms", gap);
-			gapMs = gap.tointeger();
 		}
 
 		SetData("Steps", list.tostring());
 		SetData("Count", steps.len());
 		SetData("Index", 0);
-		SetData("GapMs", gapMs);
-		Say(steps.len() + " casts, " + gapMs + "ms between them");
+		SetData("GapMs", CfgInt("psi_chain_gap_ms", PSI_REFIRE_MS));
+		Say(steps.len() + " steps: " + list.tostring());
 		// Never run commands from OnBeginScript: it runs while the chain's .cmd file is still being
 		// read, and a run from here re-enters that file (endless PsiChain creation, stack overflow).
 		SetOneShotTimer("ChainStart", 0.01);
 	}
 
-	function StepName(index) {
+	function Step(index) {
 		return PsiSplitList(GetData("Steps"))[index];
+	}
+
+	function IsWaitStep(step) {
+		return step.len() > 1 && step.slice(0, 1) == "w" && PsiIsDigits(step.slice(1));
+	}
+
+	function IsInlineCast(step) {
+		if (step.len() < 2)
+			return false;
+		local mode = step.slice(step.len() - 1);
+		return (mode == "o" || mode == "q") && PsiIsDigits(step.slice(0, step.len() - 1));
+	}
+
+	function Stop(reason) {
+		Say(reason + ", stopping");
+		Object.Destroy(self);
 	}
 
 	function StartStep() {
 		local index = GetData("Index");
+		local step = Step(index);
+		local label = "step " + (index + 1) + "/" + GetData("Count") + ": ";
+
+		if (step == "arm") {
+			if (PsiAmpInHand()) {
+				Say(label + "arm - psi amp already in hand");
+				SetOneShotTimer("ChainNext", 0.01);
+			}
+			else {
+				local drawMs = CfgInt("psi_draw_ms", 800);
+				Say(label + "arm - drawing the psi amp, waiting " + drawMs + "ms");
+				Debug.Command("equip_weapon psi amp");
+				SetOneShotTimer("ChainNext", drawMs / 1000.0);
+			}
+			return;
+		}
+
+		if (IsWaitStep(step)) {
+			local waitMs = step.slice(1).tointeger();
+			Say(label + "wait " + waitMs + "ms");
+			SetOneShotTimer("ChainNext", waitMs / 1000.0);
+			return;
+		}
+
 		SetData("ReleasedBefore", ND.psiCastsReleased);
 		SetData("WaitedMs", 0);
-		Say("step " + (index + 1) + "/" + GetData("Count") + ": " + StepName(index));
-		Debug.Command("run psi\\" + StepName(index) + ".cmd");
+
+		if (IsInlineCast(step)) {
+			local power = step.slice(0, step.len() - 1).tointeger();
+			local quickfire = step.slice(step.len() - 1) == "q";
+			if (!(power in ND.psiDisciplines))
+				return Stop(label + "there's no discipline " + power);
+			if (!PsiAmpInHand())
+				return Stop(label + "the psi amp isn't in hand (add an arm step first)");
+			local discipline = ND.psiDisciplines[power];
+			Say(label + discipline.name + (quickfire ? " (quickfire)" : " (overload if it helps)"));
+			Debug.Command("set psi_name " + discipline.name + (quickfire ? "_Quickfire" : ""));
+			Debug.Command("set psi_power " + power);
+			Debug.Command("set psi_slot 0");
+			Debug.Command("set psi_benefits " + discipline.benefits);
+			Debug.Command("set psi_tier " + (power / 8 + 1));
+			Debug.Command("set psi_mode " + (quickfire ? 0 : 1));
+			Debug.Command("summon_obj PsiCast");
+		}
+		else {
+			Say(label + step);
+			Debug.Command("run psi\\" + step + ".cmd");
+		}
 		SetOneShotTimer("ChainPoll", PSI_CHAIN_POLL_S);
 	}
 
@@ -225,15 +308,15 @@ class PsiChain extends SqRootScript {
 		}
 		else if (name == "ChainPoll") {
 			if (ND.psiCastsReleased > GetData("ReleasedBefore")) {
-				SetOneShotTimer("ChainNext", GetData("GapMs") / 1000.0);
+				// An explicit wait step after this cast replaces the default gap.
+				local next = GetData("Index") + 1;
+				local explicitWait = next < GetData("Count") && IsWaitStep(Step(next));
+				SetOneShotTimer("ChainNext", explicitWait ? 0.01 : GetData("GapMs") / 1000.0);
 				return;
 			}
 			local waited = GetData("WaitedMs") + (PSI_CHAIN_POLL_S * 1000).tointeger();
-			if (waited > PSI_CHAIN_TIMEOUT_MS) {
-				Say("step " + (GetData("Index") + 1) + " never released, stopping (check that psi\\" + StepName(GetData("Index")) + ".cmd exists)");
-				Object.Destroy(self);
-				return;
-			}
+			if (waited > PSI_CHAIN_TIMEOUT_MS)
+				return Stop("step " + (GetData("Index") + 1) + " (" + Step(GetData("Index")) + ") never released");
 			SetData("WaitedMs", waited);
 			SetOneShotTimer("ChainPoll", PSI_CHAIN_POLL_S);
 		}

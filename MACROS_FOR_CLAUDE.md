@@ -73,7 +73,20 @@ set psi_chain_gap_ms 500
 summon_obj PsiChain
 ```
 
-- **Steps** are macro file names from `psi\`, without `.cmd`, separated by commas, with no spaces. For example, `T1_Projected_Cryokinesis_Quickfire` is a quickfire step.
+- **Step kinds,** comma-separated, with no spaces:
+  - `arm`: draw the amp if it isn't in hand, then wait `psi_draw_ms` (set it in the chain file, normally 800).
+  - `<id>o`: cast discipline `<id>` with conditional overload. `<id>q`: quickfire it. The ids are in the [table](#discipline-numbers).
+  - `w<ms>`: wait that many milliseconds. Put one between casts, at least `w500`.
+  - `<name>`: run `psi\<name>.cmd`, a discipline script. These draw the amp themselves.
+- **Direct casts (`<id>o` / `<id>q`) never draw the amp.** Without a leading `arm` step, the chain stops with a console message when the amp isn't in hand.
+- **Preferred form,** as produced by `psi\Macro_Builder.html`:
+  ```
+  set psi_chain arm,6o,w500,15q
+  set psi_draw_ms 800
+  set psi_chain_gap_ms 500
+  summon_obj PsiChain
+  ```
+- **If no `w` step follows a cast,** the chain pauses `psi_chain_gap_ms` instead.
 - **Each step follows its own macro's rules.** A conditional-overload step overloads only when the discipline benefits.
 - **The gap must be at least 500.** That's the psi amp's Shot Interval, and higher PSI doesn't shorten it. At 400 ms, the next cast's fire press was ignored.
 - **A step that hasn't released after 5 seconds stops the chain.** Usually that means the file name was misspelled.

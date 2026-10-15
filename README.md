@@ -124,7 +124,9 @@ run psi\lib\draw_cast.cmd
 
 ## Chain several casts on one key
 
-A chain script casts several disciplines in a row. Put chains in `psi\chains\`:
+**The easiest way: open `psi\Macro_Builder.html` in your browser.** Pick disciplines, choose quickfire or conditional overload, and it builds the chain macro and the key binding line for you. It works offline.
+
+By hand, a chain script casts several disciplines in a row. Put chains in `psi\chains\`:
 
 ```
 set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis
@@ -135,6 +137,12 @@ summon_obj PsiChain
 Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
 
 - **`psi_chain`** lists discipline script names from the [table below](#discipline-scripts), without `.cmd`, separated by commas, with no spaces.
+- **Chain steps can also be written directly,** as the builder does:
+  - `arm` draws the amp if it isn't in hand, then waits `psi_draw_ms`.
+  - `6o` casts discipline 6 with conditional overload; `6q` quickfires it.
+  - `w500` waits 500 ms.
+  - Direct casts never draw the amp themselves. Without an `arm` step, the chain stops if the amp isn't in hand.
+  - Example: `set psi_chain arm,6o,w500,15q`.
 - **Each step follows its own script:** the plain name overloads when the discipline benefits, and the `_Quickfire` name casts immediately.
 - **The first step draws the amp if needed.** Later steps find it already in hand.
 - **`psi_chain_gap_ms`** is the pause after each cast releases, before the next one starts. 500 ms matches the psi amp's refire limit (its `Shot Interval` in the game data). Lower values can swallow the next cast.

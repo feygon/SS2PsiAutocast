@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>psi_autocast Macro Builder</title>
+<style>
+  :root {
+    --bg: #1a1a1a; --text: #dcdcdc; --card: #2a2a2a; --border: #444;
+    --accent: #66ccff; --ok: #66ff99; --warn: #ff9999; --muted: #888;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.1rem; margin: 0 0 8px; }
+  p { margin: 4px 0 8px; }
+  a { color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 16px 0; }
+  .hint { color: var(--muted); font-size: 0.9rem; }
+  .warn { color: var(--warn); font-size: 0.9rem; }
+  .ok { color: var(--ok); font-size: 0.9rem; }
+  label { display: block; margin: 8px 0 4px; }
+  select, input[type=text], input[type=number] {
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 8px; font: inherit; width: 100%;
+  }
+  input[type=number] { width: 7em; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .radio { display: inline-flex; gap: 6px; align-items: center; margin: 4px 16px 4px 0; }
+  button {
+    background: #333; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px;
+    padding: 6px 12px; font: inherit; cursor: pointer;
+  }
+  button:hover:not(:disabled) { background: #3a3a3a; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; color: var(--muted); border-color: var(--border); }
+  button.small { padding: 2px 8px; font-size: 0.85rem; }
+  ol.steps { list-style: none; padding: 0; margin: 0; }
+  .step { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px; border: 1px solid var(--border); border-radius: 6px; margin: 6px 0; background: #222; }
+  .step .what { flex: 1 1 260px; }
+  .step.wait { background: transparent; border-style: dashed; color: var(--muted); }
+  .tag { font-size: 0.8rem; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); }
+  .tag.over { color: var(--accent); border-color: var(--accent); }
+  pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 4px 0 8px; }
+  .status { min-height: 1.4em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>psi_autocast Macro Builder</h1>
+  <p>Build a one-key psi macro for <b>System Shock 2: 25th Anniversary Remaster</b> with the psi_autocast mod. Add casts in the order you want them. The builder puts the right waits between them, then gives you the macro file and the key binding line.</p>
+  <p class="hint">Works offline. Nothing you enter leaves this page.</p>
+
+  <section class="card" aria-labelledby="add-h">
+    <h2 id="add-h">1. Add a cast</h2>
+    <label for="discipline">Discipline</label>
+    <select id="discipline"></select>
+    <div id="benefitHint" class="hint"></div>
+
+    <div role="radiogroup" aria-label="How it casts">
+      <label class="radio"><input type="radio" name="mode" value="o" checked> Conditional overload</label>
+      <label class="radio"><input type="radio" name="mode" value="q"> Quickfire</label>
+    </div>
+    <div id="modeHint" class="hint"></div>
+    <p><button id="addCast" type="button">Add cast</button> <span id="addStatus" class="status ok" aria-live="polite"></span></p>
+  </section>
+
+  <section class="card" aria-labelledby="steps-h">
+    <h2 id="steps-h">2. Steps, in order</h2>
+    <ol id="steps" class="steps"></ol>
+    <p id="armMissing" class="warn" hidden>No arm step: this macro only works when the psi amp is already in your hands. If it isn't, the chain stops and says so in the console. <button id="addArm" type="button" class="small">Add arm step back</button></p>
+    <p id="noCasts" class="hint">No casts yet. Add one above.</p>
+    <p class="hint">Waits between casts default to 500 ms, the psi amp's refire limit. You can raise a wait, but not set it below 500.</p>
+  </section>
+
+  <section class="card" aria-labelledby="settings-h">
+    <h2 id="settings-h">3. Name and key</h2>
+    <label for="macroName">Macro file name <span class="hint">(letters, numbers and underscores)</span></label>
+    <input id="macroName" type="text" spellcheck="false" autocomplete="off">
+    <div id="nameHint" class="hint"></div>
+
+    <div class="row">
+      <div>
+        <label for="bindKey">Key to bind</label>
+        <input id="bindKey" type="text" value="v" spellcheck="false" autocomplete="off" style="width:7em">
+      </div>
+      <div>
+        <label for="drawMs">Amp draw wait (ms)</label>
+        <input id="drawMs" type="number" min="300" step="50" value="800">
+      </div>
+    </div>
+    <div id="settingsHint" class="hint">800 ms is reliable when switching from the pistol. Heavier weapons may need longer.</div>
+  </section>
+
+  <section class="card" aria-labelledby="out-h">
+    <h2 id="out-h">4. Your macro</h2>
+    <p id="outBlocked" class="warn" hidden></p>
+    <label>File contents, saved as <code id="savePath"></code></label>
+    <pre id="macroText"></pre>
+    <p>
+      <button id="downloadMacro" type="button">Download macro file</button>
+      <button id="copyMacro" type="button">Copy file contents</button>
+      <span id="macroStatus" class="status ok" aria-live="polite"></span>
+    </p>
+
+    <label>Key binding line for <code>user.bnd</code></label>
+    <pre id="bindText"></pre>
+    <p><button id="copyBind" type="button">Copy binding line</button> <span id="bindStatus" class="status ok" aria-live="polite"></span></p>
+
+    <h2>Install it</h2>
+    <ol>
+      <li>Save the macro file into the game's <code>psi\chains\</code> folder (inside the folder containing <code>SystemShock2Remastered.exe</code>). Create the folder if it doesn't exist.</li>
+      <li><b>Close the game</b>, then add the binding line to <code>%USERPROFILE%\Saved Games\Nightdive Studios\System Shock 2 Remastered\user.bnd</code>. Check that the key isn't already bound: search the file for <code id="bindSearch"></code>.</li>
+      <li>Start the game and press the key. The console (Ctrl+;) reports each step.</li>
+    </ol>
+    <p class="hint">Once the binding exists, you can edit the macro file while the game runs. The next keypress uses the new version.</p>
+  </section>
+</main>
+
+<script>
+"use strict";
+const DISCIPLINES = [{"id":1,"tier":1,"name":"Psycho-Reflective Screen","file":"T1_Psycho_Reflective_Screen","benefits":false},{"id":2,"tier":1,"name":"Neuro-Reflex Dampening","file":"T1_Neuro_Reflex_Dampening","benefits":false},{"id":3,"tier":1,"name":"Kinetic Redirection","file":"T1_Kinetic_Redirection","benefits":true},{"id":4,"tier":1,"name":"Psychogenic Agility","file":"T1_Psychogenic_Agility","benefits":false},{"id":5,"tier":1,"name":"Psychogenic Cyber-Affinity","file":"T1_Psychogenic_Cyber_Affinity","benefits":false},{"id":6,"tier":1,"name":"Projected Cryokinesis","file":"T1_Projected_Cryokinesis","benefits":true},{"id":7,"tier":1,"name":"Remote Electron Tampering","file":"T1_Remote_Electron_Tampering","benefits":true},{"id":9,"tier":2,"name":"Anti-Entropic Field","file":"T2_Anti_Entropic_Field","benefits":false},{"id":10,"tier":2,"name":"Adrenaline Overproduction","file":"T2_Adrenaline_Overproduction","benefits":false},{"id":11,"tier":2,"name":"Neural Decontamination","file":"T2_Neural_Decontamination","benefits":false},{"id":12,"tier":2,"name":"Cerebro-Stimulated Regeneration","file":"T2_Cerebro_Stimulated_Regeneration","benefits":true},{"id":13,"tier":2,"name":"Psychogenic Strength","file":"T2_Psychogenic_Strength","benefits":false},{"id":14,"tier":2,"name":"Recursive Psionic Amplification","file":"T2_Recursive_Psionic_Amplification","benefits":false},{"id":15,"tier":2,"name":"Localized Pyrokinesis","file":"T2_Localized_Pyrokinesis","benefits":false},{"id":17,"tier":3,"name":"Molecular Duplication","file":"T3_Molecular_Duplication","benefits":true},{"id":18,"tier":3,"name":"Electron Cascade","file":"T3_Electron_Cascade","benefits":true},{"id":19,"tier":3,"name":"Energy Reflection","file":"T3_Energy_Reflection","benefits":false},{"id":20,"tier":3,"name":"Neural Toxin-Blocker","file":"T3_Neural_Toxin_Blocker","benefits":false},{"id":21,"tier":3,"name":"Enhanced Motion Sensitivity","file":"T3_Enhanced_Motion_Sensitivity","benefits":false},{"id":22,"tier":3,"name":"Projected Pyrokinesis","file":"T3_Projected_Pyrokinesis","benefits":true},{"id":23,"tier":3,"name":"Psionic Hypnogenesis","file":"T3_Psionic_Hypnogenesis","benefits":true},{"id":25,"tier":4,"name":"Photonic Redirection","file":"T4_Photonic_Redirection","benefits":false},{"id":26,"tier":4,"name":"Remote Pattern Detection","file":"T4_Remote_Pattern_Detection","benefits":false},{"id":27,"tier":4,"name":"Electron Suppression","file":"T4_Electron_Suppression","benefits":true},{"id":28,"tier":4,"name":"Psychogenic Endurance","file":"T4_Psychogenic_Endurance","benefits":false},{"id":29,"tier":4,"name":"Molecular Transmutation","file":"T4_Molecular_Transmutation","benefits":true},{"id":30,"tier":4,"name":"Remote Circuitry Manipulation","file":"T4_Remote_Circuitry_Manipulation","benefits":true},{"id":31,"tier":4,"name":"Cerebro-Energetic Extension","file":"T4_Cerebro_Energetic_Extension","benefits":false},{"id":33,"tier":5,"name":"Advanced Cerebro-Stimulated Regeneration","file":"T5_Advanced_Cerebro_Stimulated_Regeneration","benefits":true},{"id":34,"tier":5,"name":"Soma Transference","file":"T5_Soma_Transference","benefits":true},{"id":35,"tier":5,"name":"Instantaneous Quantum Relocation","file":"T5_Instantaneous_Quantum_Relocation","benefits":false},{"id":36,"tier":5,"name":"Imposed Neural Restructuring","file":"T5_Imposed_Neural_Restructuring","benefits":true},{"id":37,"tier":5,"name":"Metacreative Barrier","file":"T5_Metacreative_Barrier","benefits":true},{"id":38,"tier":5,"name":"External Psionic Detonation","file":"T5_External_Psionic_Detonation","benefits":false},{"id":39,"tier":5,"name":"Psycho-Reflective Aura","file":"T5_Psycho_Reflective_Aura","benefits":false}];
+const REFIRE_MS = 500;
+const byId = new Map(DISCIPLINES.map(d => [d.id, d]));
+const $ = id => document.getElementById(id);
+
+// State: an optional arm step, then casts. Each cast after the first carries the wait before it.
+const state = { arm: true, casts: [], nameTouched: false };
+
+function flash(el, text, isError) {
+  el.textContent = text;
+  el.className = "status " + (isError ? "warn" : "ok");
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.textContent = ""; }, 2500);
+}
+
+function fillDisciplines() {
+  const select = $("discipline");
+  for (let tier = 1; tier <= 5; tier++) {
+    const group = document.createElement("optgroup");
+    group.label = "Tier " + tier;
+    for (const d of DISCIPLINES.filter(x => x.tier === tier)) {
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = d.name + (d.benefits ? "  (overload helps)" : "");
+      group.appendChild(opt);
+    }
+    select.appendChild(group);
+  }
+}
+
+function selectedDiscipline() { return byId.get(Number($("discipline").value)); }
+function selectedMode() { return document.querySelector("input[name=mode]:checked").value; }
+
+function updateAddHints() {
+  const d = selectedDiscipline();
+  $("benefitHint").textContent = d.benefits
+    ? "Overloading strengthens " + d.name + "."
+    : d.name + " doesn't gain anything from overloading.";
+  $("modeHint").textContent = selectedMode() === "o"
+    ? (d.benefits
+        ? "Conditional overload: holds just long enough to land in the yellow zone, timed from your PSI and the tier."
+        : "Conditional overload: this discipline doesn't benefit, so it will cast immediately and say why in the console.")
+    : "Quickfire: casts immediately, even if it could be overloaded.";
+}
+
+function addCast() {
+  const d = selectedDiscipline();
+  const mode = selectedMode();
+  state.casts.push({ id: d.id, mode: mode, waitBefore: REFIRE_MS });
+  flash($("addStatus"), "Added " + d.name + (mode === "q" ? " (quickfire)." : " (conditional overload)."));
+  render();
+}
+
+function stepLabel(cast) {
+  const d = byId.get(cast.id);
+  return d.name;
+}
+
+function makeButton(text, title, onClick, disabled) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "small";
+  b.textContent = text;
+  b.title = title;
+  b.setAttribute("aria-label", title);
+  b.disabled = !!disabled;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function renderSteps() {
+  const list = $("steps");
+  list.replaceChildren();
+
+  if (state.arm) {
+    const li = document.createElement("li");
+    li.className = "step";
+    const what = document.createElement("div");
+    what.className = "what";
+    what.innerHTML = "<b>Arm psi amp</b> <span class=\"hint\">draws the amp if it isn't in hand, then waits the draw time</span>";
+    li.append(what, makeButton("Remove", "Remove the arm step", () => { state.arm = false; render(); }));
+    list.appendChild(li);
+  }
+
+  state.casts.forEach((cast, i) => {
+    if (i > 0) {
+      const wait = document.createElement("li");
+      wait.className = "step wait";
+      const label = document.createElement("label");
+      label.className = "what";
+      label.style.margin = "0";
+      label.append("Wait ");
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = REFIRE_MS;
+      input.step = 50;
+      input.value = cast.waitBefore;
+      input.setAttribute("aria-label", "Wait before cast " + (i + 1) + ", in milliseconds");
+      input.addEventListener("input", () => {
+        cast.waitBefore = Number(input.value);
+        note.textContent = cast.waitBefore < REFIRE_MS
+          ? "Minimum 500 ms: the psi amp can't fire again sooner, so the next cast would be lost."
+          : "";
+        renderOutput();
+      });
+      const note = document.createElement("span");
+      note.className = "warn";
+      label.append(input, " ms ", note);
+      wait.appendChild(label);
+      list.appendChild(wait);
+    }
+
+    const li = document.createElement("li");
+    li.className = "step";
+    const what = document.createElement("div");
+    what.className = "what";
+    const d = byId.get(cast.id);
+    const name = document.createElement("b");
+    name.textContent = (i + 1) + ". " + d.name;
+    const tag = document.createElement("span");
+    const willOverload = cast.mode === "o" && d.benefits;
+    tag.className = "tag" + (willOverload ? " over" : "");
+    tag.textContent = cast.mode === "q" ? "quickfire" : (d.benefits ? "overload" : "immediate (no overload benefit)");
+    what.append(name, " ", tag);
+    li.append(
+      what,
+      makeButton("Up", "Move " + d.name + " earlier", () => { move(i, -1); }, i === 0),
+      makeButton("Down", "Move " + d.name + " later", () => { move(i, 1); }, i === state.casts.length - 1),
+      makeButton("Remove", "Remove " + d.name, () => { state.casts.splice(i, 1); render(); })
+    );
+    list.appendChild(li);
+  });
+
+  $("armMissing").hidden = state.arm;
+  $("noCasts").hidden = state.casts.length > 0;
+}
+
+function move(i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= state.casts.length) return;
+  const casts = state.casts;
+  [casts[i].id, casts[j].id] = [casts[j].id, casts[i].id];
+  [casts[i].mode, casts[j].mode] = [casts[j].mode, casts[i].mode];
+  render();
+}
+
+function defaultName() {
+  if (state.casts.length === 0) return "My_Psi_Macro";
+  const parts = state.casts.map(c => byId.get(c.id).file.replace(/^T\d_/, "") + (c.mode === "q" ? "_Quick" : ""));
+  return ("Chain_" + parts.join("_then_")).slice(0, 80);
+}
+
+function cleanName(text) { return text.replace(/[^A-Za-z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, ""); }
+
+function macroTokens() {
+  const tokens = [];
+  if (state.arm) tokens.push("arm");
+  state.casts.forEach((c, i) => {
+    if (i > 0) tokens.push("w" + c.waitBefore);
+    tokens.push(c.id + c.mode);
+  });
+  return tokens;
+}
+
+function problems() {
+  const list = [];
+  if (state.casts.length === 0) list.push("Add at least one cast.");
+  if (state.casts.some((c, i) => i > 0 && !(c.waitBefore >= REFIRE_MS))) list.push("Every wait must be at least 500 ms.");
+  const name = $("macroName").value;
+  if (!name || cleanName(name) !== name) list.push("The file name may only use letters, numbers and underscores.");
+  const key = $("bindKey").value.trim();
+  if (!key || /\s|"/.test(key)) list.push("Enter a key to bind, such as v or f8.");
+  const draw = Number($("drawMs").value);
+  if (state.arm && !(draw >= 300)) list.push("The amp draw wait must be at least 300 ms.");
+  return list;
+}
+
+function renderOutput() {
+  if (!state.nameTouched) $("macroName").value = defaultName();
+  const issues = problems();
+  const blocked = issues.length > 0;
+  $("outBlocked").hidden = !blocked;
+  $("outBlocked").textContent = issues.join(" ");
+  for (const id of ["downloadMacro", "copyMacro", "copyBind"]) $(id).disabled = blocked;
+
+  const name = $("macroName").value || "My_Psi_Macro";
+  const key = $("bindKey").value.trim().toLowerCase() || "v";
+  const lines = ["set psi_chain " + macroTokens().join(",")];
+  if (state.arm) lines.push("set psi_draw_ms " + (Number($("drawMs").value) || 800));
+  lines.push("set psi_chain_gap_ms " + REFIRE_MS, "summon_obj PsiChain");
+  $("macroText").textContent = lines.join("\n");
+  $("savePath").textContent = "psi\\chains\\" + name + ".cmd";
+  $("bindText").textContent = "bind " + key + " \"run psi\\chains\\" + name + ".cmd\"";
+  $("bindSearch").textContent = "bind " + key + " ";
+  $("nameHint").textContent = state.nameTouched ? "" : "Named from the steps. Type your own to change it.";
+}
+
+function render() { renderSteps(); renderOutput(); }
+
+async function copyText(text, statusEl, what) {
+  try {
+    await navigator.clipboard.writeText(text);
+    flash(statusEl, "Copied the " + what + ".");
+  } catch (e) {
+    flash(statusEl, "Couldn't copy automatically. Select the text above and copy it with Ctrl+C.", true);
+  }
+}
+
+function download() {
+  const name = $("macroName").value + ".cmd";
+  const blob = new Blob([$("macroText").textContent + "\n"], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  flash($("macroStatus"), "Downloaded " + name + ". Move it into the game's psi\\chains\\ folder.");
+}
+
+fillDisciplines();
+$("discipline").value = "6";
+$("discipline").addEventListener("change", updateAddHints);
+document.querySelectorAll("input[name=mode]").forEach(r => r.addEventListener("change", updateAddHints));
+$("addCast").addEventListener("click", addCast);
+$("addArm").addEventListener("click", () => { state.arm = true; render(); });
+$("macroName").addEventListener("input", () => { state.nameTouched = true; renderOutput(); });
+$("bindKey").addEventListener("input", renderOutput);
+$("drawMs").addEventListener("input", renderOutput);
+$("copyMacro").addEventListener("click", () => copyText($("macroText").textContent, $("macroStatus"), "file contents"));
+$("copyBind").addEventListener("click", () => copyText($("bindText").textContent, $("bindStatus"), "binding line"));
+$("downloadMacro").addEventListener("click", download);
+updateAddHints();
+render();
+</script>
+</body>
+</html>
