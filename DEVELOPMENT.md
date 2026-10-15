@@ -122,6 +122,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Nested `run`** works: key files calling `run psi\lib\…` apply every part.
   - **Conditional overload:** tier 1 held 1564 ms, giving `OnOverloadSuccess`. The tier 2 no-benefit discipline cast immediately, with the console explanation.
 - **Still untested:**
+  - **Chains (v1.2):** `PsiChain` runs each step's discipline script, waits for `ND.psiCastsReleased` to go up, pauses `psi_chain_gap_ms`, then starts the next step. The minimum gap before the amp can fire again isn't known yet.
   - **Effective versus base PSI** for the zone lookup. They were equal during testing.
   - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.

@@ -9,10 +9,11 @@
 4. [Bind a key](#bind-a-key)
 5. [How overload timing is calculated](#how-overload-timing-is-calculated)
 6. [Build your own key script](#build-your-own-key-script)
-7. [Troubleshooting](#troubleshooting)
-8. [Uninstall](#uninstall)
-9. [Discipline scripts](#discipline-scripts)
-10. [License](#license)
+7. [Chain several casts on one key](#chain-several-casts-on-one-key)
+8. [Troubleshooting](#troubleshooting)
+9. [Uninstall](#uninstall)
+10. [Discipline scripts](#discipline-scripts)
+11. [License](#license)
 
 ## What it does
 
@@ -119,6 +120,25 @@ run psi\lib\draw_cast.cmd
 - **Set every value in every script.** Values carry over from the last script that ran.
 - **`run psi\…` needs a backslash.** Forward slashes don't work.
 - **Scripts are read on each keypress,** so edits take effect at once, even mid-game.
+
+## Chain several casts on one key
+
+A chain script casts several disciplines in a row. Put chains in `psi\chains\`:
+
+```
+set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis
+set psi_chain_gap_ms 700
+summon_obj PsiChain
+```
+
+Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
+
+- **`psi_chain`** lists discipline script names from the [table below](#discipline-scripts), without `.cmd`, separated by commas, with no spaces.
+- **Each step follows its own script:** the plain name overloads when the discipline benefits, and the `_Quickfire` name casts immediately.
+- **The first step draws the amp if needed.** Later steps find it already in hand.
+- **`psi_chain_gap_ms`** is the pause after each cast releases, before the next one starts.
+- **The console reports** each step (`chain: step 2/3: …`) and then `chain: done`. A step that never releases within 5 seconds stops the chain.
+- **Don't fire or switch weapons while a chain runs.** Your input would mix with the chain's own.
 
 ## Troubleshooting
 

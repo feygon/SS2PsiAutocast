@@ -1,0 +1,3 @@
+set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis
+set psi_chain_gap_ms 700
+summon_obj PsiChain

@@ -136,9 +136,114 @@ class PsiCast extends SqRootScript {
 		else if (name == "PsiRelease") {
 			Debug.Command("fire_weapon 0");
 			Say("released");
+			ND.psiCastsReleased++;
 			Object.Destroy(self);
 		}
 	}
 }
 
+// Counts finished casts, so a chain can tell when its current step has released.
+ND.psiCastsReleased <- 0;
+
+// PsiChain: casts several disciplines in a row from one key.
+//   set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis   discipline scripts in psi\, comma-separated
+//   set psi_chain_gap_ms 700                                          pause after each release before the next cast
+//   summon_obj PsiChain
+// Each step runs its discipline script, so it draws, quickfires or overloads by that script's own rules.
+const PSI_CHAIN_POLL_S = 0.05;
+const PSI_CHAIN_TIMEOUT_MS = 5000;  // longest a step may take before the chain gives up
+
+// Splits "a,b, c" into ["a", "b", "c"], skipping empty entries.
+function PsiSplitList(text) {
+	local items = [];
+	local current = "";
+	foreach (ch in text) {
+		local c = ch.tochar();
+		if (c == "," || c == " " || c == "	") {
+			if (current.len() > 0)
+				items.push(current);
+			current = "";
+		}
+		else
+			current += c;
+	}
+	if (current.len() > 0)
+		items.push(current);
+	return items;
+}
+
+class PsiChain extends SqRootScript {
+	function Say(text) {
+		print("[psi_autocast] chain: " + text);
+	}
+
+	function OnBeginScript() {
+		local list = string();
+		if (Engine.ConfigIsDefined("psi_chain"))
+			Engine.ConfigGetRaw("psi_chain", list);
+		local steps = PsiSplitList(list.tostring());
+		if (steps.len() == 0) {
+			Say("psi_chain is empty, nothing to cast");
+			Object.Destroy(self);
+			return;
+		}
+
+		local gap = int_ref();
+		local gapMs = 700;
+		if (Engine.ConfigIsDefined("psi_chain_gap_ms")) {
+			Engine.ConfigGetInt("psi_chain_gap_ms", gap);
+			gapMs = gap.tointeger();
+		}
+
+		SetData("Steps", list.tostring());
+		SetData("Count", steps.len());
+		SetData("Index", 0);
+		SetData("GapMs", gapMs);
+		Say(steps.len() + " casts, " + gapMs + "ms between them");
+		StartStep();
+	}
+
+	function StepName(index) {
+		return PsiSplitList(GetData("Steps"))[index];
+	}
+
+	function StartStep() {
+		local index = GetData("Index");
+		SetData("ReleasedBefore", ND.psiCastsReleased);
+		SetData("WaitedMs", 0);
+		Say("step " + (index + 1) + "/" + GetData("Count") + ": " + StepName(index));
+		Debug.Command("run psi\\" + StepName(index) + ".cmd");
+		SetOneShotTimer("ChainPoll", PSI_CHAIN_POLL_S);
+	}
+
+	function OnTimer() {
+		local name = message().name;
+		if (name == "ChainPoll") {
+			if (ND.psiCastsReleased > GetData("ReleasedBefore")) {
+				SetOneShotTimer("ChainNext", GetData("GapMs") / 1000.0);
+				return;
+			}
+			local waited = GetData("WaitedMs") + (PSI_CHAIN_POLL_S * 1000).tointeger();
+			if (waited > PSI_CHAIN_TIMEOUT_MS) {
+				Say("step " + (GetData("Index") + 1) + " never released, stopping (check that psi\\" + StepName(GetData("Index")) + ".cmd exists)");
+				Object.Destroy(self);
+				return;
+			}
+			SetData("WaitedMs", waited);
+			SetOneShotTimer("ChainPoll", PSI_CHAIN_POLL_S);
+		}
+		else if (name == "ChainNext") {
+			local next = GetData("Index") + 1;
+			if (next >= GetData("Count")) {
+				Say("done");
+				Object.Destroy(self);
+				return;
+			}
+			SetData("Index", next);
+			StartStep();
+		}
+	}
+}
+
 ND.Archetype("PsiCast", "ND", function(){ AddScript("PsiCast"); });
+ND.Archetype("PsiChain", "ND", function(){ AddScript("PsiChain"); });
