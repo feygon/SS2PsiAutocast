@@ -143,10 +143,36 @@ function fillDisciplines() {
     for (const d of DISCIPLINES.filter(x => x.tier === tier)) {
       const opt = document.createElement("option");
       opt.value = d.id;
-      opt.textContent = d.name + (d.benefits ? "  (overload helps)" : "");
       group.appendChild(opt);
     }
     select.appendChild(group);
+  }
+  labelDisciplines();
+}
+
+// Short form for the dropdown: "1m 20s", "5m", "40s".
+function shortSeconds(total) {
+  const min = Math.floor(total / 60);
+  const sec = total % 60;
+  if (min === 0) return sec + "s";
+  return sec === 0 ? min + "m" : min + "m " + sec + "s";
+}
+
+function maxDuration(d, mode) {
+  if (!d.duration) return null;
+  const maxPsi = mode === "o" && d.benefits ? 10 : 8;
+  return d.duration.base + d.duration.perPsi * maxPsi;
+}
+
+// Option text follows the chosen mode, so the dropdown's max matches the step it will add.
+function labelDisciplines() {
+  const mode = selectedMode();
+  for (const opt of $("discipline").options) {
+    const d = byId.get(Number(opt.value));
+    const max = maxDuration(d, mode);
+    opt.textContent = d.name
+      + (d.benefits ? "  (overload helps)" : "")
+      + (max === null ? "" : "  · max " + shortSeconds(max));
   }
 }
 
@@ -154,10 +180,13 @@ function selectedDiscipline() { return byId.get(Number($("discipline").value)); 
 function selectedMode() { return document.querySelector("input[name=mode]:checked").value; }
 
 function updateAddHints() {
+  labelDisciplines();
   const d = selectedDiscipline();
-  $("benefitHint").textContent = d.benefits
+  const lasts = durationText(d, selectedMode());
+  $("benefitHint").textContent = (d.benefits
     ? "Overloading strengthens " + d.name + "."
-    : d.name + " doesn't gain anything from overloading.";
+    : d.name + " doesn't gain anything from overloading.")
+    + (lasts ? " " + lasts : "");
   $("modeHint").textContent = selectedMode() === "o"
     ? (d.benefits
         ? "Conditional overload: holds just long enough to land in the yellow zone, timed from your PSI and the tier."
