@@ -35,3 +35,4 @@ ND.psiDisciplines[36] <- { name = "T5_Imposed_Neural_Restructuring", benefits = 
 ND.psiDisciplines[37] <- { name = "T5_Metacreative_Barrier", benefits = 1 };
 ND.psiDisciplines[38] <- { name = "T5_External_Psionic_Detonation", benefits = 0 };
 ND.psiDisciplines[39] <- { name = "T5_Psycho_Reflective_Aura", benefits = 0 };
+ND.psiWeaponArchetypes <- ["wrench", "pistol", "shotgun", "assault rifle", "laser pistol", "emp rifle", "electro shock", "gren launcher", "stasis field generator", "fusion cannon", "crystal shard", "viral prolif", "worm launcher"];

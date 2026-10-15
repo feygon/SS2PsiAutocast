@@ -155,6 +155,9 @@ def write_script_data():
     ]
     for power, name, benefits in DISCIPLINES:
         lines.append(f'ND.psiDisciplines[{power}] <- {{ name = "{file_stem(power, name)}", benefits = {1 if benefits else 0} }};')
+    # Weapon types for "previous weapon"; each has psi\actions\equip\<name, underscores>.cmd.
+    names = ", ".join(f'"{name}"' for _, name in WEAPONS)
+    lines.append(f"ND.psiWeaponArchetypes <- [{names}];")
     write(SCRIPT_DATA, lines)
 
 
@@ -172,6 +175,14 @@ def write_actions():
     write(ACTIONS_DIR / "Switch_To_Previous_Weapon.cmd", ["summon_obj PsiPreviousWeapon"])
     for display, name in WEAPONS:
         write(ACTIONS_DIR / f"Switch_To_{display.replace(' ', '_')}.cmd", [f"equip_weapon {name}"])
+
+    # Used by "previous weapon": psi\actions\equip\<equip name, underscores>.cmd
+    equip_dir = ACTIONS_DIR / "equip"
+    equip_dir.mkdir(exist_ok=True)
+    for old in equip_dir.glob("*.cmd"):
+        old.unlink()
+    for _, name in WEAPONS:
+        write(equip_dir / f"{name.replace(' ', '_')}.cmd", [f"equip_weapon {name}"])
 
 
 def write_builder():

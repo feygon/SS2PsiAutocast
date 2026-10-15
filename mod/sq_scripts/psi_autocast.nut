@@ -37,9 +37,19 @@ function PsiAmpInHand() {
 
 // "Previous weapon": the weapon in hand just before a macro drew the amp. The game's own
 // last_weapon doesn't count an equip_weapon switch, so it went one weapon further back (the
-// wrench instead of the pistol). This uses the save-and-restore pattern of the game's cutscene
-// code instead: remember ShockGame.Equipped(0), later ShockGame.Equip(0, it).
+// wrench instead of the pistol). So the macro remembers ShockGame.Equipped(0) and switches back
+// through the normal path: psi\actions\equip\<archetype>.cmd, which runs equip_weapon.
+// Not ShockGame.Equip(0, weapon): in game that left the amp unequippable, even by hand,
+// until the save was reloaded.
 ND.psiWeaponBeforeArm <- 0;
+
+// "Assault Rifle" -> "assault_rifle": the file name of psi\actions\equip\<name>.cmd.
+function PsiFileSafe(text) {
+	local result = "";
+	foreach (ch in text.tolower())
+		result += ch == ' ' ? "_" : ch.tochar();
+	return result;
+}
 
 function PsiRememberWeapon() {
 	local weapon = ShockGame.Equipped(0);
@@ -51,8 +61,20 @@ function PsiSwitchToRememberedWeapon() {
 	local weapon = ND.psiWeaponBeforeArm;
 	if (weapon == 0 || !Object.Exists(weapon))
 		return "previous weapon: no weapon remembered (no macro has drawn the amp yet)";
-	ShockGame.Equip(0, weapon);
-	return "switch back to the previous weapon (" + ShockGame.GetArchetypeName(weapon) + ")";
+	// Match the weapon to a known type (it may be a variant, as the amp is "StarterAmp"),
+	// then switch through that type's equip file.
+	local equipName = null;
+	foreach (name in ND.psiWeaponArchetypes) {
+		local type = Object.Named(name);
+		if (type != 0 && Object.InheritsFrom(weapon, type)) {
+			equipName = name;
+			break;
+		}
+	}
+	if (equipName == null)
+		equipName = ShockGame.GetArchetypeName(weapon);
+	Debug.Command("run psi\\actions\\equip\\" + PsiFileSafe(equipName) + ".cmd");
+	return "switch back to the previous weapon (" + equipName + ")";
 }
 
 // PsiPreviousWeapon: the standalone "switch back to previous weapon" (psi\actions\Switch_To_Previous_Weapon.cmd).
