@@ -15,6 +15,26 @@ Press one key: your character draws the psi amp, selects the discipline and cast
 [*][b]Console feedback:[/b] every cast reports its tier, your pre-overload PSI, the overload zone and its decision.
 [/list]
 
+[size=4][b]Write your own macros[/b][/size]
+Every script is a small text file built from shared parts, so you can make your own in Notepad, with no modding tools. A macro is a few [i]set[/i] lines plus calls to the parts in [i]psi\lib[/i]:
+[code]set psi_name T1_Projected_Cryokinesis
+set psi_power 6
+set psi_slot 0
+set psi_benefits 1
+run psi\lib\T1.cmd
+run psi\lib\overload.cmd
+run psi\lib\draw_cast.cmd[/code]
+[list]
+[*][b]T1.cmd to T5.cmd[/b] set the discipline's tier.
+[*][b]quickfire.cmd[/b] or [b]overload.cmd[/b] chooses how it casts.
+[*][b]draw_cast.cmd[/b] draws the amp if needed, then casts.
+[/list]
+Chain macros cast several disciplines from one key. List the scripts in order:
+[code]set psi_chain T2_Localized_Pyrokinesis,T1_Projected_Cryokinesis
+set psi_chain_gap_ms 500
+summon_obj PsiChain[/code]
+Macros are read fresh on every keypress, so you can edit them while the game is running. The readme lists every setting and every discipline number.
+
 [size=4][b]Requirements[/b][/size]
 [list]
 [*]System Shock 2: 25th Anniversary Remaster on PC. Tested on the Epic version, game version 1.3.4984.
