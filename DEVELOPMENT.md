@@ -130,7 +130,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Effective versus base PSI** for the zone lookup. They were equal during testing.
   - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.
-- **Draw time from heavier weapons.** `PsiCast` could pick the wait by the held weapon's archetype.
+- **Draw time from weapons other than the pistol:** untested. If it turns out to differ, `PsiCast` could pick the wait by the held weapon's archetype.
 - **Tap for a normal cast and hold for an overload on the same key:** not possible, because a script can't read whether a key is held.
 - **Steam and GOG installs:** untested. The expected difference is only the install path.
 

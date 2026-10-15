@@ -115,7 +115,7 @@ run psi\lib\draw_cast.cmd
 | `psi_slot` | Quick slot (6–12) to use when `psi_power` is 0. Fill it in game with Shift+F6 to F12 while hovering over the power |
 | `psi_benefits` | 1 if overloading improves the discipline, otherwise 0 |
 | `psi_mode` | Set by the parts: 0 quickfire, 1 conditional overload. 2 holds for exactly `psi_release_ms` (manual) |
-| `psi_draw_ms` | How long to wait for the amp to come up. Heavier weapons may need more than 800 ms |
+| `psi_draw_ms` | How long to wait for the amp to come up. 800 ms has been tested from the pistol; other weapons haven't been tested |
 
 - **Set every value in every script.** Values carry over from the last script that ran.
 - **`run psi\…` needs a backslash.** Forward slashes don't work.
