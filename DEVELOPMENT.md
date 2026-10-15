@@ -88,6 +88,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **`+` (press/release) works only for built-in commands** such as `+fire_weapon`. `+run` does nothing.
 - **No `wait`, `alias` or delay command exists.** `run` and `exec` execute a whole file in one frame.
 - **`run` accepts a subfolder path with a backslash:** `run psi\file.cmd` works, `run psi/file.cmd` doesn't. Paths are relative to the install folder.
+- **`Debug.Command` goes through the console,** so a script sending `equip_weapon psi amp` gets `equip_weapon psi`, which does nothing. The arm, hypo and weapon chain steps hit this. They now run one-line action files (`psi\actions\*.cmd`) instead, because lines in `.cmd` files take multi-word arguments.
 - **Console arguments split on spaces:** in the console, use `equip_weapon "psi amp"`. In a `.cmd` file, `equip_weapon psi amp` works.
 - **`fire_weapon N`:** any non-zero N presses, 0 releases. It isn't a shot count.
 - **Weapon switch plus fire in the same frame** leaves the trigger stuck as held, which blocks weapon switching until a click releases it.

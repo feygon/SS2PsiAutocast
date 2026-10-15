@@ -392,7 +392,8 @@ function setFinalWeapon() {
   const value = $("finalWeapon").value;
   const weapon = value === "last" ? { token: "last", label: "Previous weapon" } : WEAPONS.find(w => w.name === value);
   state.finalWeapon = {
-    token: value === "last" ? "last" : "weapon:" + weapon.name.replace(/ /g, "_"),
+    // weapon:<Name> runs psi\actions\Switch_To_<Name>.cmd, named from the weapon's label.
+    token: value === "last" ? "last" : "weapon:" + weapon.label.replace(/ /g, "_"),
     label: value === "last" ? "Switch back to the previous weapon" : "Switch to " + weapon.label,
     short: value === "last" ? "Previous_Weapon" : weapon.label.replace(/ /g, "_"),
     waitBefore: state.finalWeapon ? state.finalWeapon.waitBefore : REFIRE_MS,

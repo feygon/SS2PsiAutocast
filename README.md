@@ -144,7 +144,7 @@ Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
   - `w500` waits 500 ms.
   - Direct casts never draw the amp themselves. Without an `arm` step, the chain stops if the amp isn't in hand.
   - `hypo` uses a psi hypo. It can go anywhere.
-  - `last` switches back to the previous weapon, and `weapon:<name>` switches to a weapon, with underscores for spaces (`weapon:assault_rifle`). Put these last.
+  - `last` switches back to the previous weapon, and `weapon:<Name>` switches to a weapon by running `psi\actions\Switch_To_<Name>.cmd` (`weapon:Assault_Rifle`). Put these last.
   - Example: `set psi_chain arm,6o,w500,hypo,w500,15q,w500,last`.
 - **Two casts must be at least 500 ms apart in total,** counting any hypo between them.
 - **Auto psi hypo:** with `set psi_auto_hypo 1` in a chain, each cast first checks your psi points. If they're at or below your maximum minus what a hypo restores, it uses a psi hypo, waits `psi_auto_hypo_wait_ms` (500), then casts, so none is wasted. A hypo restores 30 on Easy and 20 on Normal, Hard and Impossible, plus 20% with the Pharmo-Friendly O/S upgrade (36 or 24). The mod reads your difficulty and upgrades itself.

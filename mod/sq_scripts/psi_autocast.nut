@@ -188,9 +188,11 @@ class PsiCancel extends SqRootScript {
 //   <id>o    cast discipline <id>, overloading if it benefits (conditional overload)
 //   <id>q    cast discipline <id> immediately (quickfire)
 //   w<ms>    wait <ms> milliseconds
-//   hypo     use a psi hypo (use_obj psi booster)
+//   hypo     use a psi hypo (runs psi\actions\Use_Psi_Hypo.cmd)
 //   last     switch back to the previous weapon (last_weapon)
-//   weapon:<name>  switch to a weapon by its equip_weapon name, underscores for spaces (weapon:assault_rifle)
+//   weapon:<Name>  switch weapon by running psi\actions\Switch_To_<Name>.cmd (weapon:Assault_Rifle)
+// Steps whose commands take multi-word arguments run action files: Debug.Command goes through the
+// console, which splits at spaces, so "equip_weapon psi amp" sent directly becomes "equip_weapon psi".
 //   <name>   run psi\<name>.cmd (a discipline script, which draws the amp itself)
 // Inline casts (<id>o / <id>q) never draw the amp: without an arm step the amp must already be in hand.
 const PSI_CHAIN_POLL_S = 0.05;
@@ -326,7 +328,7 @@ class PsiChain extends SqRootScript {
 			else {
 				local drawMs = CfgInt("psi_draw_ms", 800);
 				Say(label + "arm - drawing the psi amp, waiting " + drawMs + "ms");
-				Debug.Command("equip_weapon psi amp");
+				Debug.Command("run psi\\actions\\Arm_Psi_Amp.cmd");
 				SetOneShotTimer("ChainNext", drawMs / 1000.0);
 			}
 			return;
@@ -334,7 +336,7 @@ class PsiChain extends SqRootScript {
 
 		if (step == "hypo") {
 			Say(label + "use psi hypo");
-			Debug.Command("use_obj psi booster");
+			Debug.Command("run psi\\actions\\Use_Psi_Hypo.cmd");
 			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
@@ -347,9 +349,9 @@ class PsiChain extends SqRootScript {
 		}
 
 		if (step.len() > 7 && step.slice(0, 7) == "weapon:") {
-			local weapon = PsiUnderscoresToSpaces(step.slice(7));
-			Say(label + "switch to " + weapon);
-			Debug.Command("equip_weapon " + weapon);
+			local weapon = step.slice(7);
+			Say(label + "switch to " + PsiUnderscoresToSpaces(weapon));
+			Debug.Command("run psi\\actions\\Switch_To_" + weapon + ".cmd");
 			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
@@ -371,7 +373,7 @@ class PsiChain extends SqRootScript {
 				+ " (max - " + restore + ", what a hypo restores on this difficulty"
 				+ (ShockGame.HasTrait("Player", eTrait.kTraitPharmo) ? " with Pharmo-Friendly" : "")
 				+ "), using a psi hypo first, then waiting " + waitMs + "ms");
-			Debug.Command("use_obj psi booster");
+			Debug.Command("run psi\\actions\\Use_Psi_Hypo.cmd");
 			SetData("AutoHypoFor", index);
 			SetOneShotTimer("ChainRetry", waitMs / 1000.0);
 			return;

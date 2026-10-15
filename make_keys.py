@@ -163,6 +163,9 @@ def write_actions():
     ACTIONS_DIR.mkdir(parents=True, exist_ok=True)
     for old in ACTIONS_DIR.glob("*.cmd"):
         old.unlink()
+    # The chain runs these files rather than sending the commands itself: Debug.Command goes through
+    # the console, which splits arguments at spaces ("equip_weapon psi amp" becomes "equip_weapon psi").
+    write(ACTIONS_DIR / "Arm_Psi_Amp.cmd", ["equip_weapon psi amp"])
     write(ACTIONS_DIR / "Use_Psi_Hypo.cmd", ["use_obj psi booster"])
     write(ACTIONS_DIR / "Cancel_Macro.cmd", ["summon_obj PsiCancel"])
     write(ACTIONS_DIR / "Switch_To_Previous_Weapon.cmd", ["last_weapon"])
