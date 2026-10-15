@@ -66,7 +66,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Floats 8–12:** bar fill time in seconds for tiers 1–5: 2.0 1.5 1.0 0.75 0.4.
   - **Floats 13–15:** 0.85 0.82 0.78, meaning unknown (burnout-related?).
   - **Validated by testing:** tier 1 at PSI 4 (zone 1460–2000 ms, matched); tier 2 burnout just after 1500 ms, at PSI 4 and 5.
-- **Psi amp refire:** its `BaseGunDesc` setting 0 has **Shot Interval = 500 ms**, which is the minimum time between casts. The remaster's `shoot` viewmodel animation (30 fps, 60 frames) is cosmetic and doesn't limit firing.
+- **Psi amp refire:** its `BaseGunDesc` setting 0 has **Shot Interval = 500 ms**, which is the minimum time between casts. It doesn't shrink with PSI: at PSI 6 a 400 ms chain gap dropped the second cast (the fire press was ignored), while 500 ms works. The remaster's `shoot` viewmodel animation (30 fps, 60 frames) is cosmetic and doesn't limit firing.
 - **Reading game data files:** a `.gam` file is a Dark tag file. The first uint32 is the table-of-contents offset. The table of contents is a uint32 count followed by 20-byte entries (12-byte name, offset, size). Each chunk starts with a 24-byte header. Property chunks (`P$…`) are records of int32 object id, uint32 size, then the data.
 - **Learned disciplines:** `PsiPowerDesc` / `PsiPower2Desc` on the player are probably bit sets of learned disciplines (ids 0–31 and 32–39). Unverified, so the script only warns.
 
@@ -110,6 +110,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 - **The remaster's player script** logs `OnOverloadSuccess` when the player gets an `OverloadSuccess` message. The player's four script slots are all taken, so a script of your own can't be added there. Instead, use `ND.g_PlayerCore.Subscribe(listener, "OverloadSuccess")` with a plain class instance that has an `OnOverloadSuccess(message)` method. The dev probe does this.
 - **Script compile errors** show up only in the console or log, at load time, as `[darkscript] kpf:/mods/…nut line = (N) column = (M) : error …`. A file that fails to compile defines nothing, so `summon_obj` for its objects fails silently. After a script change, run `condump` and search for `error`.
 - **Never call `Debug.Command("run …")` from `OnBeginScript`.** An object summoned by a `.cmd` file starts while that file is still being read, and a `run` at that moment re-enters the outer file. That re-summoned the chain endlessly, until the game reported `Native stack overflow`. Start work from a short timer instead. `PsiCast` and `PsiChain` both do.
+- **`condump` is a 1,025-line ring buffer.** Once it wraps, the newest lines continue at the top of `condump.txt`, so read the start of the file as well as the end.
 - **`base` is a Squirrel keyword** (the parent class), so it can't be used as a variable name.
 
 **Commands found in `help` / `dump_cmds`:**
