@@ -75,10 +75,10 @@
     <h2 id="config-h">1. Settings</h2>
     <p class="hint">These apply to the whole macro, including steps you've already added.</p>
     <label class="radio" style="display:flex"><input id="autoHypo" type="checkbox"> Auto psi hypo before every cast <span id="configStatus" class="status ok" aria-live="polite"></span></label>
-    <p class="hint">Before each cast, uses a psi hypo if your psi points are at or below your maximum minus what a hypo restores, then waits 500 ms, so none is wasted. A hypo restores 30 on Easy and 20 on Normal, Hard and Impossible, plus 20% with the Pharmo-Friendly O/S upgrade (36 or 24). The mod reads your difficulty and upgrades itself. Not yet tested in the game.</p>
+    <p class="hint">Before each cast, uses a psi hypo if your psi points are at or below your maximum minus what a hypo restores, then waits 500 ms, so none is wasted. A hypo restores 30 on Easy and 20 on Normal, Hard and Impossible, plus 20% with the Pharmo-Friendly O/S upgrade (36 or 24). The mod reads your difficulty and upgrades itself.</p>
     <label for="drawMs">Amp draw wait (ms)</label>
     <input id="drawMs" type="number" min="300" step="50" value="800">
-    <div id="settingsHint" class="hint">How long the Arm psi amp step waits for the amp to come up. 800 ms has been tested switching from the pistol. Other weapons haven't been tested.</div>
+    <div id="settingsHint" class="hint">How long the Arm psi amp step waits for the amp to come up. 800 ms works when switching from the pistol.</div>
   </section>
 
   <section class="card" aria-labelledby="add-h">
@@ -112,7 +112,6 @@
       <button id="setWeapon" type="button">Set final weapon</button>
     </div>
     <p class="hint">"Previous weapon" uses the game's <code>last_weapon</code> command.</p>
-    <p class="hint">Psi hypo and weapon switch steps haven't been tested in the game yet.</p>
     <p><span id="otherStatus" class="status ok" aria-live="polite"></span></p>
   </section>
 
@@ -122,7 +121,7 @@
     <p id="armMissing" class="warn" hidden>No arm step: this macro only works when the psi amp is already in your hands. If it isn't, the chain stops and says so in the console. <button id="addArm" type="button" class="small">Add arm step back</button></p>
     <p id="noCasts" class="hint">No steps yet. Add one above.</p>
     <p class="hint">Waits default to 500 ms. Two casts must be at least 500 ms apart in total, counting any hypo between them, because that's the psi amp's refire limit. Other waits can be shorter.</p>
-    <p class="hint">Durations come from the game's data, or from its help text where the data has no entry. They haven't been timed in play. "Max" uses PSI 8, the highest PSI in the game's overload table. When the step overloads a discipline that benefits, it uses PSI 10, since an overload adds 2 PSI according to the System Shock wiki.</p>
+    <p class="hint">Durations come from the game's data, or from its help text where the data has no entry. "Max" uses PSI 8, the highest PSI in the game's overload table. When the step overloads a discipline that benefits, it uses PSI 10, since an overload adds 2 PSI according to the System Shock wiki.</p>
   </section>
 
   <section class="card" aria-labelledby="settings-h">
