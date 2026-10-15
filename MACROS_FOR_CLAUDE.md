@@ -111,6 +111,8 @@ summon_obj PsiChain
 | `psi_auto_hypo` | 0 or 1 | Before each cast in a chain, use a psi hypo if psi points are at or below max minus what a hypo restores. The mod works this out from `Quest.Get("Difficulty")` (1 = Easy: 30, otherwise 20) and the Pharmo-Friendly trait (× 1.2), giving 36 or 24. Always set it, to 0 or 1, because it carries over between macros |
 | `psi_auto_hypo_wait_ms` | ms | Pause after an auto hypo before the cast (default 500) |
 
+**Cancel:** `psi\actions\Cancel_Macro.cmd` (`summon_obj PsiCancel`) stops any running macro at its next timer. It releases fire first, so a cast that is mid-charge casts at normal strength, or fizzles if the charge has only just started. Suggest binding it alongside any chain.
+
 ## Overload timing
 
 This comes from the game's Overload Params table (`OLPARAM` in `shock2.gam`; SCP doesn't change it):

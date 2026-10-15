@@ -156,6 +156,7 @@ Bind it like any other script: `bind v "run psi\chains\Chain_Example.cmd"`.
 | Script | Does |
 |---|---|
 | `Use_Psi_Hypo.cmd` | Uses a psi hypo (`use_obj psi booster`) |
+| `Cancel_Macro.cmd` | Stops any running macro (`summon_obj PsiCancel`). A cast that is mid-charge is released, so it casts at normal strength, or fizzles if the charge has only just started; the rest of the macro is skipped |
 | `Switch_To_Previous_Weapon.cmd` | Switches back to the previous weapon (`last_weapon`) |
 | `Switch_To_<Weapon>.cmd` | Switches to that weapon: Wrench, Pistol, Shotgun, Assault_Rifle, Laser_Pistol, EMP_Rifle, Laser_Rapier, Grenade_Launcher, Stasis_Field_Generator, Fusion_Cannon, Crystal_Shard, Viral_Proliferator, Annelid_Launcher |
 

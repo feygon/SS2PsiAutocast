@@ -123,11 +123,18 @@ class PsiCast extends SqRootScript {
 		SetData("Power", power);
 		SetData("Slot", slot);
 		SetData("HoldMs", ChooseHold(name, mode, tier, psi, benefits));
+		SetData("CancelAt", ND.psiCancelCount);
 		SetOneShotTimer("PsiSelect", waitMs / 1000.0);
 	}
 
 	function OnTimer() {
 		local name = message().name;
+		// Cancelled (PsiCancel): don't press, or stop waiting to release. PsiCancel already let go of fire.
+		if (ND.psiCancelCount != GetData("CancelAt")) {
+			Say("cancelled");
+			Object.Destroy(self);
+			return;
+		}
 		if (name == "PsiSelect") {
 			local power = GetData("Power");
 			if (power > 0)
@@ -148,6 +155,28 @@ class PsiCast extends SqRootScript {
 
 // Counts finished casts, so a chain can tell when its current step has released.
 ND.psiCastsReleased <- 0;
+
+// Raised by PsiCancel. Each running PsiCast and PsiChain remembers its value at the start
+// and stops at its next timer if it has changed.
+ND.psiCancelCount <- 0;
+
+// PsiCancel: stops any running macro.  summon_obj PsiCancel  (psi\actions\Cancel_Macro.cmd)
+// A cast that is mid-charge is released, so it casts at normal strength (or fizzles if the
+// charge has only just started); everything after it is skipped.
+class PsiCancel extends SqRootScript {
+	function OnBeginScript() {
+		SetOneShotTimer("Cancel", 0.01);
+	}
+
+	function OnTimer() {
+		if (message().name != "Cancel")
+			return;
+		ND.psiCancelCount++;
+		Debug.Command("fire_weapon 0");
+		print("[psi_autocast] cancel: stopping any running macro");
+		Object.Destroy(self);
+	}
+}
 
 // PsiChain: runs several steps in a row from one key.
 //   set psi_chain arm,6o,w500,15q
@@ -244,6 +273,7 @@ class PsiChain extends SqRootScript {
 		SetData("Count", steps.len());
 		SetData("Index", 0);
 		SetData("AutoHypoFor", -1);
+		SetData("CancelAt", ND.psiCancelCount);
 		SetData("GapMs", CfgInt("psi_chain_gap_ms", PSI_REFIRE_MS));
 		Say(steps.len() + " steps: " + list.tostring());
 		// Never run commands from OnBeginScript: it runs while the chain's .cmd file is still being
@@ -376,6 +406,8 @@ class PsiChain extends SqRootScript {
 
 	function OnTimer() {
 		local name = message().name;
+		if (ND.psiCancelCount != GetData("CancelAt"))
+			return Stop("cancelled at step " + (GetData("Index") + 1) + "/" + GetData("Count"));
 		if (name == "ChainStart" || name == "ChainRetry") {
 			StartStep();
 		}
@@ -408,3 +440,4 @@ class PsiChain extends SqRootScript {
 
 ND.Archetype("PsiCast", "ND", function(){ AddScript("PsiCast"); });
 ND.Archetype("PsiChain", "ND", function(){ AddScript("PsiChain"); });
+ND.Archetype("PsiCancel", "ND", function(){ AddScript("PsiCancel"); });
