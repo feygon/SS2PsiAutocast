@@ -28,6 +28,25 @@
   input[type=number] { width: 7em; }
   .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .radio { display: inline-flex; gap: 6px; align-items: center; margin: 4px 16px 4px 0; }
+  .combo { position: relative; }
+  [role=combobox] {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px;
+  }
+  [role=combobox]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .combo-name { flex: 0 1 auto; }
+  .combo-tag { color: var(--muted); font-size: 0.85rem; }
+  .combo-max { margin-left: auto; color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+  .combo-arrow { color: var(--muted); }
+  #disciplineList {
+    position: absolute; z-index: 10; left: 0; right: 0; top: 100%; margin: 2px 0 0; padding: 4px 0;
+    list-style: none; background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    max-height: 60vh; overflow-y: auto;
+  }
+  .combo-group { padding: 6px 10px 2px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+  [role=option] { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 20px; cursor: pointer; }
+  [role=option].active { background: #333; }
+  [role=option][aria-selected=true] .combo-name { color: var(--accent); }
   button {
     background: #333; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px;
     padding: 6px 12px; font: inherit; cursor: pointer;
@@ -53,8 +72,17 @@
 
   <section class="card" aria-labelledby="add-h">
     <h2 id="add-h">1. Add a cast</h2>
-    <label for="discipline">Discipline</label>
-    <select id="discipline"></select>
+    <label id="disciplineLabel">Discipline</label>
+    <div class="combo">
+      <div id="discipline" role="combobox" tabindex="0" aria-haspopup="listbox" aria-expanded="false"
+           aria-controls="disciplineList" aria-labelledby="disciplineLabel disciplineValue">
+        <span id="disciplineValue" class="combo-name"></span>
+        <span id="disciplineValueTag" class="combo-tag"></span>
+        <span id="disciplineValueMax" class="combo-max"></span>
+        <span class="combo-arrow" aria-hidden="true">▾</span>
+      </div>
+      <ul id="disciplineList" role="listbox" aria-labelledby="disciplineLabel" hidden></ul>
+    </div>
     <div id="benefitHint" class="hint"></div>
 
     <div role="radiogroup" aria-label="How it casts">
@@ -135,19 +163,142 @@ function flash(el, text, isError) {
   el._timer = setTimeout(() => { el.textContent = ""; }, 2500);
 }
 
+// Custom discipline dropdown (ARIA combobox + listbox), so each row can show a grey,
+// right-aligned max duration, which a native <select> can't lay out.
+const combo = { selectedId: 6, activeIndex: -1, typed: "", typedAt: 0 };
+
+function comboOptions() { return [...$("disciplineList").querySelectorAll("[role=option]")]; }
+
+function span(className, text) {
+  const s = document.createElement("span");
+  s.className = className;
+  s.textContent = text;
+  return s;
+}
+
 function fillDisciplines() {
-  const select = $("discipline");
+  const list = $("disciplineList");
   for (let tier = 1; tier <= 5; tier++) {
-    const group = document.createElement("optgroup");
-    group.label = "Tier " + tier;
+    const header = document.createElement("li");
+    header.className = "combo-group";
+    header.setAttribute("role", "presentation");
+    header.textContent = "Tier " + tier;
+    list.appendChild(header);
     for (const d of DISCIPLINES.filter(x => x.tier === tier)) {
-      const opt = document.createElement("option");
-      opt.value = d.id;
-      group.appendChild(opt);
+      const li = document.createElement("li");
+      li.id = "discipline-" + d.id;
+      li.setAttribute("role", "option");
+      li.setAttribute("aria-selected", "false");
+      li.dataset.id = d.id;
+      li.append(span("combo-name", d.name), span("combo-tag", d.benefits ? "(overload helps)" : ""), span("combo-max", ""));
+      li.addEventListener("mousedown", e => e.preventDefault()); // keep focus on the combobox
+      li.addEventListener("click", () => chooseDiscipline(d.id));
+      li.addEventListener("mousemove", () => setActive(comboOptions().indexOf(li)));
+      list.appendChild(li);
     }
-    select.appendChild(group);
   }
   labelDisciplines();
+}
+
+function isListOpen() { return !$("disciplineList").hidden; }
+
+function setActive(index) {
+  const options = comboOptions();
+  if (index < 0 || index >= options.length) return;
+  options.forEach((o, i) => o.classList.toggle("active", i === index));
+  combo.activeIndex = index;
+  $("discipline").setAttribute("aria-activedescendant", options[index].id);
+  options[index].scrollIntoView({ block: "nearest" });
+}
+
+function openList() {
+  $("disciplineList").hidden = false;
+  $("discipline").setAttribute("aria-expanded", "true");
+  setActive(comboOptions().findIndex(o => Number(o.dataset.id) === combo.selectedId));
+}
+
+function closeList() {
+  $("disciplineList").hidden = true;
+  $("discipline").setAttribute("aria-expanded", "false");
+  $("discipline").removeAttribute("aria-activedescendant");
+}
+
+function chooseDiscipline(id) {
+  combo.selectedId = id;
+  closeList();
+  $("discipline").focus();
+  updateAddHints();
+}
+
+// Type-to-search: letters typed within a second build up a prefix to jump to.
+function typeAhead(key) {
+  const now = Date.now();
+  combo.typed = (now - combo.typedAt > 1000 ? "" : combo.typed) + key.toLowerCase();
+  combo.typedAt = now;
+  const options = comboOptions();
+  const start = combo.typed.length === 1 ? combo.activeIndex + 1 : combo.activeIndex;
+  for (let n = 0; n < options.length; n++) {
+    const i = (Math.max(start, 0) + n) % options.length;
+    if (byId.get(Number(options[i].dataset.id)).name.toLowerCase().startsWith(combo.typed)) {
+      setActive(i);
+      return;
+    }
+  }
+}
+
+function onComboKey(e) {
+  const open = isListOpen();
+  const options = comboOptions();
+  switch (e.key) {
+    case "ArrowDown":
+      e.preventDefault();
+      if (!open) openList(); else setActive(Math.min(combo.activeIndex + 1, options.length - 1));
+      break;
+    case "ArrowUp":
+      e.preventDefault();
+      if (!open) openList(); else setActive(Math.max(combo.activeIndex - 1, 0));
+      break;
+    case "Home":
+      if (open) { e.preventDefault(); setActive(0); }
+      break;
+    case "End":
+      if (open) { e.preventDefault(); setActive(options.length - 1); }
+      break;
+    case " ":
+      // Mid-search, a space is part of the name being typed ("psionic h"), not a choice.
+      if (open && combo.typed && Date.now() - combo.typedAt < 1000) {
+        e.preventDefault();
+        typeAhead(" ");
+        break;
+      }
+      // falls through: otherwise Space chooses, like Enter
+    case "Enter":
+      e.preventDefault();
+      if (!open) openList();
+      else chooseDiscipline(Number(options[combo.activeIndex].dataset.id));
+      break;
+    case "Escape":
+      if (open) { e.preventDefault(); closeList(); }
+      break;
+    case "Tab":
+      if (open) chooseDiscipline(Number(options[combo.activeIndex].dataset.id));
+      break;
+    default:
+      if (e.key.length === 1 && /\S/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (!open) openList();
+        typeAhead(e.key);
+      }
+  }
+}
+
+function setupCombo() {
+  fillDisciplines();
+  const box = $("discipline");
+  box.addEventListener("click", () => (isListOpen() ? closeList() : openList()));
+  box.addEventListener("keydown", onComboKey);
+  document.addEventListener("mousedown", e => {
+    if (isListOpen() && !e.target.closest(".combo")) closeList();
+  });
 }
 
 // Short form for the dropdown: "1m 20s", "5m", "40s".
@@ -164,19 +315,26 @@ function maxDuration(d, mode) {
   return d.duration.base + d.duration.perPsi * maxPsi;
 }
 
-// Option text follows the chosen mode, so the dropdown's max matches the step it will add.
-function labelDisciplines() {
-  const mode = selectedMode();
-  for (const opt of $("discipline").options) {
-    const d = byId.get(Number(opt.value));
-    const max = maxDuration(d, mode);
-    opt.textContent = d.name
-      + (d.benefits ? "  (overload helps)" : "")
-      + (max === null ? "" : "  · max " + shortSeconds(max));
-  }
+function maxLabel(d, mode) {
+  const max = maxDuration(d, mode);
+  return max === null ? "" : "max " + shortSeconds(max);
 }
 
-function selectedDiscipline() { return byId.get(Number($("discipline").value)); }
+// Max durations follow the chosen mode, so the dropdown matches the step it will add.
+function labelDisciplines() {
+  const mode = selectedMode();
+  for (const opt of comboOptions()) {
+    const d = byId.get(Number(opt.dataset.id));
+    opt.querySelector(".combo-max").textContent = maxLabel(d, mode);
+    opt.setAttribute("aria-selected", String(d.id === combo.selectedId));
+  }
+  const chosen = selectedDiscipline();
+  $("disciplineValue").textContent = chosen.name;
+  $("disciplineValueTag").textContent = chosen.benefits ? "(overload helps)" : "";
+  $("disciplineValueMax").textContent = maxLabel(chosen, mode);
+}
+
+function selectedDiscipline() { return byId.get(combo.selectedId); }
 function selectedMode() { return document.querySelector("input[name=mode]:checked").value; }
 
 function updateAddHints() {
@@ -399,9 +557,7 @@ function download() {
   flash($("macroStatus"), "Downloaded " + name + ". Move it into the game's psi\\chains\\ folder.");
 }
 
-fillDisciplines();
-$("discipline").value = "6";
-$("discipline").addEventListener("change", updateAddHints);
+setupCombo();
 document.querySelectorAll("input[name=mode]").forEach(r => r.addEventListener("change", updateAddHints));
 $("addCast").addEventListener("click", addCast);
 $("addArm").addEventListener("click", () => { state.arm = true; render(); });
