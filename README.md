@@ -62,6 +62,10 @@
 
 One command per binding. `user.bnd` doesn't chain commands with semicolons, and a second `bind` on the same key replaces the first.
 
+**Starter keys, set up for you:** [`extras/starterPsiPowers.bat`](https://github.com/feygon/SS2PsiAutocast/blob/main/extras/starterPsiPowers.bat), from the GitHub repo, binds two keys with the game closed. If G or J already has a binding, it leaves that key alone, shows the existing binding, and prints the line to add on another key. It backs up `user.bnd` before changing it.
+- **G** draws the amp and casts Projected Cryokinesis, overloading it automatically.
+- **J** draws the amp, quickfires Localized Pyrokinesis, then switches back to your previous weapon (`psi\chains\Starter_Localized_Pyrokinesis.cmd`).
+
 ## How overload timing is calculated
 
 The numbers come from the game's own **Overload Params** table (`OLPARAM` in `shock2.gam`; SCP doesn't change it).

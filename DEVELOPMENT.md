@@ -18,6 +18,7 @@
 | `mod/` | Packed into `psi_autocast.kpf`: `modinfo.json` and `sq_scripts/psi_autocast.nut` |
 | `psi/` | Example key files, installed to `<game>\psi\` |
 | `build.py` | Build, package and install |
+| `extras/` | GitHub only, never packaged: `starterPsiPowers.bat`, which binds the G and J starter keys. A `.bat` in the Nexus zip would trip Nexus's executable quarantine |
 | `dist/` | Build output (ignored by git) |
 
 ## Build and install
@@ -150,6 +151,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Effective versus base PSI** for the zone lookup. They were equal during testing.
   - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.
+  - **The starter keys in game:** `starterPsiPowers.bat` passed against a test `user.bnd` (free keys get bound; existing custom `bind g`/`bind J` bindings are left alone and reported; `g+shift` and `gamma` don't count as G; a second run adds nothing; a last line without a newline; a missing file). The J chain (`arm,15q,w500,last`) hasn't been pressed in game; it uses only steps that passed above.
 - **Draw time from weapons other than the pistol:** untested. If it turns out to differ, `PsiCast` could pick the wait by the held weapon's archetype.
 - **Tap for a normal cast and hold for an overload on the same key:** not possible, because a script can't read whether a key is held.
 - **Steam and GOG installs:** untested. The expected difference is only the install path.
