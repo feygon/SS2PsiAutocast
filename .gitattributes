@@ -1,4 +1,4 @@
 *.cmd text eol=lf
 *.nut text eol=lf
 *.json text eol=lf
-*.bat text eol=crlf
+*.bat -text
