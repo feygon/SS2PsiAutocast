@@ -44,10 +44,10 @@ Key bindings live in `user.bnd`, in your Saved Games folder above. **The game mu
 
 ### The easy way: the setup scripts (GitHub)
 
-Both are double-click `.bat` files. Each backs up `user.bnd` first, never changes a key you've already bound, and lists what it bound. Run them from any folder.
+Both are double-click `.bat` files. Each backs up `user.bnd` first, never changes a key you've already bound without asking, and lists what it bound. Run them from any folder.
 
 - **`starterPsiPowers.bat`** (psi_autocast's repo, `extras/`): binds **G** to Projected Cryokinesis with automatic overload and **J** to Localized Pyrokinesis then your previous weapon, if those keys are free.
-- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`): binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, then keypad and navigation keys). It leaves the mouse wheel alone.
+- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`): binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, then keypad and navigation keys). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. It leaves the mouse wheel alone.
 
 ### By hand
 
