@@ -5,8 +5,6 @@ rem   J  draws the psi amp, casts Localized Pyrokinesis, then switches back to y
 rem A key that already has a binding is left alone. Backs up user.bnd before changing it. Run it with the game closed.
 setlocal
 
-set "BND_DIR=%USERPROFILE%\Saved Games\Nightdive Studios\System Shock 2 Remastered"
-set "BND=%BND_DIR%\user.bnd"
 set "G_LINE=bind g "run psi\T1_Projected_Cryokinesis.cmd""
 set "J_LINE=bind j "run psi\chains\Starter_Localized_Pyrokinesis.cmd""
 
@@ -16,12 +14,37 @@ if not errorlevel 1 (
     goto :end
 )
 
-if not exist "%BND%" (
-    echo user.bnd wasn't found in:
+rem Find user.bnd. Saved Games is a Windows known folder that can be moved (its Properties, OneDrive, policy),
+rem so %USERPROFILE%\Saved Games isn't always right. In order: a folder given on the command line, Windows' own
+rem location for shell:SavedGames, the Shell Folders registry value, %USERPROFILE%\Saved Games, then ask.
+set "GAME_SUBDIR=Nightdive Studios\System Shock 2 Remastered"
+set "BND_DIR="
+if not "%~1"=="" if exist "%~1\user.bnd" set "BND_DIR=%~1"
+if not defined BND_DIR (
+    for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "(New-Object -ComObject Shell.Application).Namespace('shell:SavedGames').Self.Path" 2^>nul`) do (
+        if exist "%%P\%GAME_SUBDIR%\user.bnd" set "BND_DIR=%%P\%GAME_SUBDIR%"
+    )
+)
+if not defined BND_DIR (
+    for /f "tokens=2,*" %%A in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}" 2^>nul ^| find "REG_"') do (
+        if exist "%%B\%GAME_SUBDIR%\user.bnd" set "BND_DIR=%%B\%GAME_SUBDIR%"
+    )
+)
+if not defined BND_DIR if exist "%USERPROFILE%\Saved Games\%GAME_SUBDIR%\user.bnd" set "BND_DIR=%USERPROFILE%\Saved Games\%GAME_SUBDIR%"
+if not defined BND_DIR (
+    echo Couldn't find user.bnd. It's in your Saved Games folder, under %GAME_SUBDIR%.
+    echo If you've never started the game, start it once and quit, then run this again.
+    set /p "BND_DIR=Or paste the folder that contains user.bnd here, then press Enter: "
+)
+if not defined BND_DIR goto :end
+set "BND_DIR=%BND_DIR:"=%"
+if not exist "%BND_DIR%\user.bnd" (
+    echo There's no user.bnd in:
     echo   %BND_DIR%
-    echo Start the game once, quit it, then run this again.
     goto :end
 )
+set "BND=%BND_DIR%\user.bnd"
+echo Using %BND%
 
 rem For each key: ADD_x=1 if it's free. A plain binding only; g+shift and the like don't count.
 set ADD_G=0
