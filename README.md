@@ -2,6 +2,8 @@
 
 **TLDR:** Bind a key to one of the included scripts. Pressing it draws the psi amp if needed, selects the discipline, and casts it. Quickfire scripts cast immediately. The other scripts overload automatically when the discipline benefits, timing the release from the game's own overload table for the discipline's tier and your current PSI. There's one pair of scripts per discipline, all 35.
 
+**Step-by-step setup for psi_autocast and psi_autocast_mfd, and a troubleshooting table:** [SETUP_GUIDE.md](https://github.com/feygon/SS2PsiAutocast/blob/main/SETUP_GUIDE.md).
+
 ## Contents
 1. [What it does](#what-it-does)
 2. [Requirements](#requirements)

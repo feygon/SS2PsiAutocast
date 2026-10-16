@@ -8,7 +8,9 @@ setlocal
 set "G_LINE=bind g "run psi\T1_Projected_Cryokinesis.cmd""
 set "J_LINE=bind j "run psi\chains\Starter_Localized_Pyrokinesis.cmd""
 
-tasklist /fi "imagename eq SystemShock2Remastered.exe" 2>nul | find /i "SystemShock2Remastered.exe" >nul
+rem Windows tools are called so a Unix "find" on the PATH (Git for Windows puts one there) can't take over:
+rem findstr has no Unix namesake, and find.exe is called by its full path.
+tasklist /fi "imagename eq SystemShock2Remastered.exe" 2>nul | findstr /i /c:"SystemShock2Remastered.exe" >nul
 if not errorlevel 1 (
     echo The game is running. Quit it first: it rewrites user.bnd when it exits, which would undo these bindings.
     goto :end
@@ -26,7 +28,7 @@ if not defined BND_DIR (
     )
 )
 if not defined BND_DIR (
-    for /f "tokens=2,*" %%A in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}" 2^>nul ^| find "REG_"') do (
+    for /f "tokens=2,*" %%A in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "{4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4}" 2^>nul ^| findstr /c:"REG_"') do (
         if exist "%%B\%GAME_SUBDIR%\user.bnd" set "BND_DIR=%%B\%GAME_SUBDIR%"
     )
 )
