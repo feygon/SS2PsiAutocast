@@ -47,7 +47,7 @@ Key bindings live in `user.bnd`, in your Saved Games folder above. **The game mu
 Both are double-click `.bat` files. Each backs up `user.bnd` first, never changes a key you've already bound without asking, and lists what it bound. Run them from any folder.
 
 - **`starterPsiPowers.bat`** (psi_autocast's repo, `extras/`): binds **G** to Projected Cryokinesis with automatic overload and **J** to Localized Pyrokinesis then your previous weapon, if those keys are free.
-- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`): binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, then keypad and navigation keys). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. It leaves the mouse wheel alone.
+- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`): binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, then keypad and navigation keys). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. Last, it asks (y/n) whether the mouse wheel should scroll the MFD (see below); it asks only while the wheel still has the game's default bindings or none.
 
 ### By hand
 
@@ -64,6 +64,15 @@ bind keypad_minus "run user:/psi_macros\MacroKPMinus.cmd"
 - **The cancel key** stops any running macro.
 - **The MFD key** opens and closes the MFD.
 - **A macro key** runs a macro the MFD saves for it. Change the key and the file name together.
+
+Optional: the mouse wheel scrolls the MFD table when the mouse is over the open MFD, and switches weapons everywhere else. Replace the two `mouse_wheel` lines with:
+
+```
+bind mouse_wheel_up "summon_obj PsiMfdWheelUp"
+bind mouse_wheel_down "summon_obj PsiMfdWheelDown"
+```
+
+In a save without psi_autocast_mfd enabled, the wheel then doesn't switch weapons. To undo, put back `bind mouse_wheel_up "cycle_weapon 1"` and `bind mouse_wheel_down "cycle_weapon -1"`.
 
 ## First use
 
@@ -85,7 +94,8 @@ bind keypad_minus "run user:/psi_macros\MacroKPMinus.cmd"
 | The MFD says "No macro keys bound" | No `user.bnd` line runs a `psi_macros` file | Run `setupPsiMfd.bat`, or add a macro key line by hand |
 | A saved macro key does nothing | The binding's file name differs from the one the MFD saved, or psi_autocast isn't enabled | Check the line in `user.bnd`; the MFD saves to the name the binding uses |
 | The console says "psi_autocast isn't loaded" | psi_autocast_mfd is enabled without psi_autocast | Enable psi_autocast for the save as well |
-| The wheel switches weapons over the MFD | The wheel isn't bound to the MFD (the game doesn't keep cursor-mode wheel bindings) | Scroll with Up / Dn, or jump with T1-T5 |
+| The wheel switches weapons over the MFD | The wheel isn't bound to the MFD | Run `setupPsiMfd.bat` and answer y to the wheel, or add the two wheel lines by hand |
+| The wheel doesn't switch weapons | The wheel is bound to the MFD, and psi_autocast_mfd isn't enabled for this save | Enable it for the save, or put back the default wheel lines |
 | A setup script says the game is running | It is, or it hasn't fully closed | Quit the game, wait a moment, run it again |
 | A setup script can't find `user.bnd` | The game has never been started, or Saved Games is somewhere unusual | Start and quit the game once; or paste the folder when the script asks |
 | An overload burns out or misses | Unexpected timing | Report the console line: it shows the tier, PSI and timing used |
