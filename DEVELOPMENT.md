@@ -70,7 +70,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 - **Discipline durations:** `PsiShield` (Base Time, Add Time per PSI, in seconds) in `shock2.gam` covers 17 disciplines and matches `psihelp.str` except Psychogenic Cyber-Affinity (data 60 + 30, help 120 + 60) and Cerebro-Energetic Extension (data 10 + 10, help 0 + 10). The builder uses the data, and the help text for the 7 timed disciplines without a `PsiShield` entry. Durations haven't been timed in play.
 - **Psi amp refire:** its `BaseGunDesc` setting 0 has **Shot Interval = 500 ms**, which is the minimum time between casts. It doesn't shrink with PSI: at PSI 6 a 400 ms chain gap dropped the second cast (the fire press was ignored), while 500 ms works. The remaster's `shoot` viewmodel animation (30 fps, 60 frames) is cosmetic and doesn't limit firing.
 - **Reading game data files:** a `.gam` file is a Dark tag file. The first uint32 is the table-of-contents offset. The table of contents is a uint32 count followed by 20-byte entries (12-byte name, offset, size). Each chunk starts with a 24-byte header. Property chunks (`P$…`) are records of int32 object id, uint32 size, then the data.
-- **Learned disciplines:** `PsiPowerDesc` / `PsiPower2Desc` on the player are probably bit sets of learned disciplines (ids 0–31 and 32–39). Unverified, so the script only warns.
+- **Learned disciplines:** `PsiPowerDesc` / `PsiPower2Desc` on the player are bit sets of learned disciplines (ids 0–31 and 32–39; tier headers 0, 8, 16, 24 and 32 are the unlocked tiers). Verified 2026-10-16 through psi_autocast_mfd, whose "bought" column matched the player's disciplines.
 
 ## Packaging and performance
 
@@ -149,7 +149,6 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
   - **Auto psi hypo on Easy (30) and with Pharmo-Friendly (36 / 24).** Only the 20-point case has run.
   - **Cancel while a cast is mid-charge,** and Cancel with nothing running.
   - **Effective versus base PSI** for the zone lookup. They were equal during testing.
-  - **The `PsiPowerDesc` learned-bits reading.** No false warnings for two learned disciplines; an unlearned one hasn't been tried.
   - **Tiers 3–5:** their timings are predicted from the table but not yet confirmed by an overload.
   - **The starter keys in game:** `starterPsiPowers.bat` passed against a test `user.bnd` (free keys get bound; existing custom `bind g`/`bind J` bindings are left alone and reported; `g+shift` and `gamma` don't count as G; a second run adds nothing; a last line without a newline; a missing file). The J chain (`arm,15q,w500,last`) hasn't been pressed in game; it uses only steps that passed above.
 - **Draw time from weapons other than the pistol:** untested. If it turns out to differ, `PsiCast` could pick the wait by the held weapon's archetype.

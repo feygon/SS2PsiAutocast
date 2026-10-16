@@ -112,7 +112,7 @@ class PsiCast extends SqRootScript {
 		print("[psi_autocast] " + text);
 	}
 
-	// Unverified reading: PsiPowerDesc / PsiPower2Desc as bit sets of learned disciplines.
+	// PsiPowerDesc / PsiPower2Desc are bit sets of learned disciplines (verified 2026-10-16, see DEVELOPMENT.md).
 	function SeemsLearned(power) {
 		local bits = power < 32
 			? Property.Get("Player", "PsiPowerDesc")
