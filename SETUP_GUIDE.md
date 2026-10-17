@@ -46,10 +46,10 @@ Key bindings live in `user.bnd`, in your Saved Games folder above. **The game mu
 
 ### The easy way: the setup scripts (GitHub)
 
-Both are double-click `.bat` files. Each backs up `user.bnd` first, never changes a key you've already bound without asking, and lists what it bound. Run them from any folder.
+Both are double-click `.bat` files. Each backs up `user.bnd` first, never changes a key you've already bound without asking, and lists what it bound. Run them from any folder. **Run one of them, not both:** `setupPsiMfd.bat` if you use the MFD (it includes the starter keys), `starterPsiPowers.bat` if you use psi_autocast on its own.
 
-- **`starterPsiPowers.bat`** (psi_autocast's repo, `extras/`): binds **G** to Projected Cryokinesis with automatic overload and **J** to Localized Pyrokinesis then your previous weapon, if those keys are free.
-- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`): binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, then keypad and navigation keys). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. Last, it asks (y/n) whether the mouse wheel should scroll the MFD (see below); it asks only while the wheel still has the game's default bindings or none.
+- **`starterPsiPowers.bat`** (psi_autocast's repo, `extras/`), for psi_autocast without the MFD: binds **G** to Projected Cryokinesis with automatic overload and **J** to Localized Pyrokinesis then your previous weapon, if those keys are free.
+- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`), for MFD users: gives **G** and **J** the same two starter casts, as macros you can edit in the MFD (`Macro_g.cmd`, `Macro_j.cmd`); binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, then keypad and navigation keys). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. Last, it asks (y/n) whether the mouse wheel should scroll the MFD (see below); it asks only while the wheel still has the game's default bindings or none.
 
 ### By hand
 
