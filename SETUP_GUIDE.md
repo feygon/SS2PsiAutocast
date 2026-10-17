@@ -36,6 +36,8 @@ Each save remembers its own mod list, so loading an old save directly won't turn
 3. **Make a regular save.** From now on that save loads with the mods.
 4. **To check:** open the console and type `mod_list`. Both mods should be under "Mods to load".
 
+**In a new game, wait until you're through training before using the MFD:** macros don't take before then.
+
 **Don't use the `mod_apply` console command mid-game:** it can unload the level.
 
 ## Bind your keys
