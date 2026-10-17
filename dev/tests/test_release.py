@@ -149,6 +149,10 @@ def run_bat(folder):
     return result.stdout
 
 
+def macro(folder, key):
+    return (folder / "psi_macros" / f"Macro_{key}.cmd").read_text().splitlines()
+
+
 def bindings(folder):
     return [l for l in (folder / "user.bnd").read_text().splitlines() if l.lower().startswith("bind ")]
 
@@ -164,8 +168,11 @@ def test_bat_binds_free_keys(tmp_path):
     (tmp_path / "user.bnd").write_bytes(('bind k "keep"\r\n').encode())
     out = run_bat(tmp_path)
     assert "Done." in out
-    assert 'bind g "run psi\\T1_Projected_Cryokinesis.cmd"' in bindings(tmp_path)
-    assert 'bind j "run psi\\chains\\Starter_Localized_Pyrokinesis.cmd"' in bindings(tmp_path)
+    # Bound through files in the save folder (the names psi_autocast_mfd uses), so the MFD can edit them later.
+    assert 'bind g "run user:/psi_macros\\Macro_g.cmd"' in bindings(tmp_path)
+    assert 'bind j "run user:/psi_macros\\Macro_j.cmd"' in bindings(tmp_path)
+    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.cmd"]
+    assert macro(tmp_path, "j") == ["run psi\\chains\\Starter_Localized_Pyrokinesis.cmd"]
     assert (tmp_path / "user.bnd.before_starter_1").exists()
 
 
@@ -192,3 +199,26 @@ def test_bat_handles_missing_final_newline(tmp_path):
     (tmp_path / "user.bnd").write_bytes(('bind k "keep"').encode())
     run_bat(tmp_path)
     assert 'bind k "keep"' in bindings(tmp_path)
+
+
+def test_bat_keeps_an_existing_macro_file(tmp_path):
+    """WHY: Macro_g.cmd may hold a macro the player built in psi_autocast_mfd; it must never be overwritten."""
+    (tmp_path / "user.bnd").write_bytes(b'bind k "keep"\r\n')
+    (tmp_path / "psi_macros").mkdir()
+    (tmp_path / "psi_macros" / "Macro_g.cmd").write_text("set psi_chain arm,3q\nsummon_obj PsiChain\n")
+    run_bat(tmp_path)
+    assert macro(tmp_path, "g")[0] == "set psi_chain arm,3q"
+    assert 'bind g "run user:/psi_macros\\Macro_g.cmd"' in bindings(tmp_path)
+
+
+def test_bat_upgrades_its_old_direct_bindings(tmp_path):
+    """WHY: Earlier versions bound G and J straight to the psi scripts; running this version moves them into the
+    files (same casts), so psi_autocast_mfd can edit them. Other bindings stay."""
+    (tmp_path / "user.bnd").write_bytes(b'bind g "run psi\\t1_projected_cryokinesis.cmd"\r\n'
+                                        b'bind j "run psi\\chains\\Starter_Localized_Pyrokinesis.cmd"\r\nbind k "keep"\r\n')
+    run_bat(tmp_path)
+    b = bindings(tmp_path)
+    assert [l for l in b if l.startswith("bind g ")] == ['bind g "run user:/psi_macros\\Macro_g.cmd"']
+    assert [l for l in b if l.startswith("bind j ")] == ['bind j "run user:/psi_macros\\Macro_j.cmd"']
+    assert 'bind k "keep"' in b
+    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.cmd"]

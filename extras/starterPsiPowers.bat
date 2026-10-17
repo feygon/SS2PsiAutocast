@@ -2,11 +2,19 @@
 rem starterPsiPowers.bat: binds two psi_autocast starter keys in the Remaster's user.bnd.
 rem   G  draws the psi amp and casts Projected Cryokinesis, overloading it automatically.
 rem   J  draws the psi amp, casts Localized Pyrokinesis, then switches back to your previous weapon.
-rem A key that already has a binding is left alone. Backs up user.bnd before changing it. Run it with the game closed.
+rem Each key runs a file in the save folder (psi_macros\Macro_g.cmd, Macro_j.cmd, the names psi_autocast_mfd uses)
+rem that runs the psi script, so the MFD can replace it with a macro later. An existing Macro_g.cmd / Macro_j.cmd is
+rem kept. Older versions of this script bound G and J straight to the psi scripts; those lines are moved into the files.
+rem Any other binding on G or J is left alone. Backs up user.bnd before changing it. Run it with the game closed.
 setlocal
 
-set "G_LINE=bind g "run psi\T1_Projected_Cryokinesis.cmd""
-set "J_LINE=bind j "run psi\chains\Starter_Localized_Pyrokinesis.cmd""
+set "G_RUN=run psi\T1_Projected_Cryokinesis.cmd"
+set "J_RUN=run psi\chains\Starter_Localized_Pyrokinesis.cmd"
+set "G_LINE=bind g "run user:/psi_macros\Macro_g.cmd""
+set "J_LINE=bind j "run user:/psi_macros\Macro_j.cmd""
+rem The direct lines, offered when G or J has the player's own binding (they need no file).
+set "G_DIRECT=bind g "run psi\T1_Projected_Cryokinesis.cmd""
+set "J_DIRECT=bind j "run psi\chains\Starter_Localized_Pyrokinesis.cmd""
 
 rem Windows tools are called so a Unix "find" on the PATH (Git for Windows puts one there) can't take over:
 rem findstr has no Unix namesake, and find.exe is called by its full path.
@@ -51,8 +59,11 @@ echo Using %BND%
 rem For each key: ADD_x=1 if it's free. A plain binding only; g+shift and the like don't count.
 set ADD_G=0
 set ADD_J=0
-call :check g "T1_Projected_Cryokinesis.cmd" ADD_G G_LINE
-call :check j "Starter_Localized_Pyrokinesis.cmd" ADD_J J_LINE
+set OLD_G=0
+set OLD_J=0
+rem \\ in a findstr /c: string matches one backslash.
+call :check g "psi\\T1_Projected_Cryokinesis.cmd" ADD_G G_DIRECT OLD_G
+call :check j "psi\\chains\\Starter_Localized_Pyrokinesis.cmd" ADD_J J_DIRECT OLD_J
 if "%ADD_G%%ADD_J%"=="00" (
     echo Nothing to add. user.bnd is unchanged.
     goto :end
@@ -71,8 +82,16 @@ copy /y "%BND%" "%BND%.before_starter_%N%" >nul || (
 )
 
 rem Redirected input makes findstr end the last line with a newline even when the file doesn't.
+rem The old direct lines being moved into files are left out; everything else is copied.
+set "DROP="
+if "%OLD_G%"=="1" set DROP=%DROP% /c:"bind g "
+if "%OLD_J%"=="1" set DROP=%DROP% /c:"bind j "
 type nul > "%BND%.starter_tmp"
-findstr "^" < "%BND%" >> "%BND%.starter_tmp"
+if defined DROP (
+    findstr /i /v /b %DROP% < "%BND%" >> "%BND%.starter_tmp"
+) else (
+    findstr "^" < "%BND%" >> "%BND%.starter_tmp"
+)
 if "%ADD_G%"=="1" >> "%BND%.starter_tmp" echo %G_LINE%
 if "%ADD_J%"=="1" >> "%BND%.starter_tmp" echo %J_LINE%
 move /y "%BND%.starter_tmp" "%BND%" >nul || (
@@ -80,10 +99,13 @@ move /y "%BND%.starter_tmp" "%BND%" >nul || (
     goto :end
 )
 
+if "%ADD_G%"=="1" call :macro_file g "%G_RUN%"
+if "%ADD_J%"=="1" call :macro_file j "%J_RUN%"
 echo.
 echo Done. Backup: user.bnd.before_starter_%N%
 if "%ADD_G%"=="1" echo   G  casts Projected Cryokinesis, overloading it automatically.
 if "%ADD_J%"=="1" echo   J  casts Localized Pyrokinesis, then switches back to your previous weapon.
+echo They run Macro_g.cmd / Macro_j.cmd in the save folder's psi_macros folder: psi_autocast_mfd can replace them with macros.
 echo The psi_autocast mod must be enabled for your save, and you need those disciplines learned.
 goto :end
 
@@ -94,15 +116,29 @@ if errorlevel 1 (
     set "%~3=1"
     goto :eof
 )
-findstr /i /b /c:"bind %~1 " "%BND%" | findstr /i /c:"%~2" >nul
+findstr /i /b /c:"bind %~1 " "%BND%" | findstr /i /c:"psi_macros\\Macro_%~1.cmd" >nul
 if not errorlevel 1 (
     echo %~1 is already set to the starter binding.
+    goto :eof
+)
+findstr /i /b /c:"bind %~1 " "%BND%" | findstr /i /c:"run %~2" >nul
+if not errorlevel 1 (
+    echo %~1 has this script's older direct binding: moving it into Macro_%~1.cmd.
+    set "%~3=1"
+    set "%~5=1"
     goto :eof
 )
 echo %~1 already has your own binding, so it was left alone:
 findstr /i /b /c:"bind %~1 " "%BND%"
 echo To use the starter on another key, add this line with the game closed, changing %~1 to a free key:
 call echo   %%%~4%%
+goto :eof
+
+rem :macro_file <key> "<command>"  writes psi_macros\Macro_<key>.cmd containing the command, unless it exists.
+:macro_file
+if not exist "%BND_DIR%\psi_macros" mkdir "%BND_DIR%\psi_macros"
+if exist "%BND_DIR%\psi_macros\Macro_%~1.cmd" goto :eof
+> "%BND_DIR%\psi_macros\Macro_%~1.cmd" echo %~2
 goto :eof
 
 :end

@@ -64,7 +64,7 @@
 
 One command per binding. `user.bnd` doesn't chain commands with semicolons, and a second `bind` on the same key replaces the first.
 
-**Starter keys, set up for you:** [`extras/starterPsiPowers.bat`](https://github.com/feygon/SS2PsiAutocast/blob/main/extras/starterPsiPowers.bat), from the GitHub repo, binds two keys with the game closed. If G or J already has a binding, it leaves that key alone, shows the existing binding, and prints the line to add on another key. It backs up `user.bnd` before changing it. If you use psi_autocast_mfd, run its `setupPsiMfd.bat` instead (or afterwards, if you add the MFD later): it sets up the same two keys, as macros you can edit in the MFD.
+**Starter keys, set up for you:** [`extras/starterPsiPowers.bat`](https://github.com/feygon/SS2PsiAutocast/blob/main/extras/starterPsiPowers.bat), from the GitHub repo, binds two keys with the game closed, each through a one-line file in the save folder (`psi_macros\Macro_g.cmd`, `Macro_j.cmd`) that psi_autocast_mfd can later replace with a macro. If G or J already has a binding, it leaves that key alone, shows the existing binding, and prints the line to add on another key. It backs up `user.bnd` before changing it. If you use psi_autocast_mfd, run its `setupPsiMfd.bat` instead (or afterwards, if you add the MFD later): it sets up the same two keys, as macros you can edit in the MFD.
 - **G** draws the amp and casts Projected Cryokinesis, overloading it automatically.
 - **J** draws the amp, quickfires Localized Pyrokinesis, then switches back to your previous weapon (`psi\chains\Starter_Localized_Pyrokinesis.cmd`).
 
