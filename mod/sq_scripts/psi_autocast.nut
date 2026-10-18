@@ -17,7 +17,9 @@
 //
 // Overload timing comes from the game's "Overload Params" table (OLPARAM in shock2.gam,
 // unchanged by SCP): the bar fills in a fixed time per tier, and the yellow zone starts at a
-// fraction of the bar set by pre-overload PSI. Releasing after the bar is full is burnout.
+// fraction of the bar set by PSI. Releasing after the bar is full is burnout. Measured in game
+// (2026-10-18, all five tiers): the fraction follows BASE PSI (implants don't count), one row lower
+// in the table than its PSI 1-8 order suggests - base PSI 6 uses the 0.58 entry.
 
 const PSI_QUICKFIRE_MS = 100;
 const PSI_SAFETY_MS = 50;           // minimum distance kept from both edges of the overload zone
@@ -26,8 +28,13 @@ const PSI_VISIBLE_MS = 50;          // extra hold so the bar is visibly in the y
 
 // Bar fill time in seconds, tiers 1-5.
 PSI_BAR_SECONDS <- [2.0, 1.5, 1.0, 0.75, 0.4];
-// Overload zone start as a fraction of the bar, pre-overload PSI 1-8.
+// Overload zone start as a fraction of the bar: OLPARAM's first eight floats, in table order.
 PSI_ZONE_START <- [1.0, 0.94, 0.85, 0.73, 0.58, 0.4, 0.19, 0.01];
+
+// The PSI_ZONE_START entry for a base PSI (see the note above: base PSI 6 -> entry 4, 0.58).
+function PsiZoneRow(psi) {
+	return psi < 2 ? 0 : (psi > 9 ? 7 : psi - 2);
+}
 
 // True when the psi amp is the weapon in hand.
 function PsiAmpInHand() {
@@ -125,8 +132,8 @@ class PsiCast extends SqRootScript {
 	// Returns the hold time in ms, explaining the decision on the console.
 	function ChooseHold(name, mode, tier, psi, benefits) {
 		local barMs = (PSI_BAR_SECONDS[tier - 1] * 1000).tointeger();
-		local startMs = (PSI_ZONE_START[psi - 1] * barMs).tointeger();
-		local basis = "tier " + tier + ", pre-overload PSI " + psi
+		local startMs = (PSI_ZONE_START[PsiZoneRow(psi)] * barMs).tointeger();
+		local basis = "tier " + tier + ", base PSI " + psi
 			+ ", overload zone " + startMs + "-" + barMs + "ms";
 
 		if (mode == 2) {
@@ -173,8 +180,11 @@ class PsiCast extends SqRootScript {
 		}
 		tier = tier < 1 ? 1 : (tier > 5 ? 5 : tier);
 
-		local psi = ShockGame.GetStat("Player", eStats.kStatPsi);
-		psi = psi < 1 ? 1 : (psi > 8 ? 8 : psi);
+		// Base PSI: the overload window ignores implants (and GetStat includes them).
+		local psi = Property.Get("Player", "BaseStatsDesc", "PSI");
+		if (psi == null || psi < 1)
+			psi = ShockGame.GetStat("Player", eStats.kStatPsi);
+		psi = psi < 1 ? 1 : psi;
 
 		if (power > 0 && !SeemsLearned(power))
 			Say(name + ": warning - this discipline may not be learned yet");

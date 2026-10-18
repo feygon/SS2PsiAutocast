@@ -132,6 +132,8 @@ def test_shipped_code_unchanged_since_the_release_tag():
     different from the repo. Comment-only changes are fine; anything else needs a new release.
     """
     version = re.search(r'"version": "([^"]+)"', (REPO / "mod/modinfo.json").read_text()).group(1)
+    if not git("tag", "--list", f"v{version}").strip():
+        pytest.skip(f"v{version} isn't tagged yet: a new release is in progress")
     diff = git("diff", f"v{version}", "--", "mod", "psi")
     changed = [l for l in diff.splitlines()
                if l[:1] in "+-" and not l.startswith(("+++", "---")) and not l[1:].strip().startswith("//")]
@@ -222,3 +224,40 @@ def test_bat_upgrades_its_old_direct_bindings(tmp_path):
     assert [l for l in b if l.startswith("bind j ")] == ['bind j "run user:/psi_macros\\Macro_j.cmd"']
     assert 'bind k "keep"' in b
     assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.cmd"]
+
+
+# ---- overload window -----------------------------------------------------------------------------------
+
+# Measured in game 2026-10-18 (OnOverloadSuccess in condump): (base PSI, tier, actual release ms, overloaded).
+# Base PSI excludes implants: 6 + 1 implant and 6 alone gave the same tier-3 window.
+OVERLOAD_MEASUREMENTS = [
+    (5, 3, 535, False), (5, 3, 634, False), (5, 3, 733, True),
+    (6, 1, 295, False), (6, 1, 461, False), (6, 1, 1794, True),
+    (6, 2, 511, False), (6, 2, 677, False), (6, 2, 1344, True),
+    (6, 3, 475, False), (6, 3, 478, False), (6, 3, 507, False), (6, 3, 652, True), (6, 3, 680, True),
+    (6, 3, 683, True), (6, 3, 826, True), (6, 3, 832, True), (6, 3, 911, True),
+    (6, 4, 478, True), (6, 4, 617, True), (6, 4, 695, True),
+    (6, 5, 283, True), (6, 5, 343, True), (6, 5, 378, True),
+]
+
+
+def nut_floats(name):
+    code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")
+    return [float(x) for x in re.search(name + r" <- \[([^\]]*)\]", code).group(1).split(",")]
+
+
+def test_overload_window_matches_the_game():
+    """
+    WHY: A cast held for the wrong time doesn't overload. In game the window followed base PSI one row lower in
+    OLPARAM than psi_autocast assumed, at every tier; with total PSI it released far too early (a tier-3
+    Molecular Duplication at PSI 6 = 5 + 1 implant never overloaded).
+    """
+    code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")
+    assert 'Property.Get("Player", "BaseStatsDesc", "PSI")' in code
+    starts, bars = nut_floats("PSI_ZONE_START"), nut_floats("PSI_BAR_SECONDS")
+    row = re.search(r"function PsiZoneRow\(psi\) \{\s*return (.*?);", code, re.S).group(1)
+    assert row == "psi < 2 ? 0 : (psi > 9 ? 7 : psi - 2)", row
+    for base, tier, release, overloaded in OVERLOAD_MEASUREMENTS:
+        r = 0 if base < 2 else min(base - 2, 7)
+        start, bar = starts[r] * bars[tier - 1] * 1000, bars[tier - 1] * 1000
+        assert (start < release < bar) == overloaded, (base, tier, release, overloaded, start)
