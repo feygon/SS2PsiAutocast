@@ -1,0 +1,8 @@
+Changelog for Nexus (Mod page > Logs, one entry per version). Plain text: one change per line.
+
+1.3
+Overload timing fixed for every tier: the overload window follows your base PSI (implants don't count), one step lower in the game's table than earlier versions assumed. Measured in game at all five tiers.
+Tier 3-5 overloads that released too early now land, and so do tier 1-2 overloads for players with a PSI implant.
+Narrow overload windows (tier 5 at low PSI) are aimed at their middle instead of being cast without an overload.
+Each cast's console line now shows your base PSI.
+GitHub extra: starterPsiPowers.bat binds G and J through Macro_g.cmd / Macro_j.cmd in the save folder, so psi_autocast_mfd can edit them.
