@@ -261,3 +261,25 @@ def test_overload_window_matches_the_game():
         r = 0 if base < 2 else min(base - 2, 7)
         start, bar = starts[r] * bars[tier - 1] * 1000, bars[tier - 1] * 1000
         assert (start < release < bar) == overloaded, (base, tier, release, overloaded, start)
+
+
+# Release lag: actual release minus the planned hold, from the 2026-10-18 fixed-hold tests (15 casts).
+RELEASE_LAGS_MS = [28, 34, 27, 24, 30, 27, 40, 35, 24, 31, 40, 28, 26, 21, 31]
+
+
+def test_narrow_zones_are_aimed_at_their_middle():
+    """
+    WHY: Tier 5 at base PSI 5 has a 108 ms zone (292-400 ms), too narrow for the usual 50 ms margins, so it cast
+    without overloading. The user chose to aim mid-zone, allowing for the measured release lag, so every measured
+    lag still lands inside the zone with room to spare; zones under 50 ms still cast immediately.
+    """
+    code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")
+    lag = int(re.search(r"const PSI_RELEASE_LAG_MS = (\d+);", code).group(1))
+    assert lag == round(sum(RELEASE_LAGS_MS) / len(RELEASE_LAGS_MS))
+    assert "startMs + (barMs - startMs) / 2 - PSI_RELEASE_LAG_MS" in code
+    start, bar = 292, 400
+    hold = start + (bar - start) // 2 - lag
+    assert hold == 316
+    for measured in RELEASE_LAGS_MS:
+        assert start + 20 <= hold + measured <= bar - 20, measured
+    assert re.search(r"barMs - startMs < PSI_NARROW_MIN_MS", code)

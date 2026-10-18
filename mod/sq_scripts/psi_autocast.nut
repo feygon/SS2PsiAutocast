@@ -25,6 +25,8 @@ const PSI_QUICKFIRE_MS = 100;
 const PSI_SAFETY_MS = 50;           // minimum distance kept from both edges of the overload zone
 const PSI_ZONE_AIM = 0.1;           // aim this far into the zone, as a fraction of its width
 const PSI_VISIBLE_MS = 50;          // extra hold so the bar is visibly in the yellow before release
+const PSI_RELEASE_LAG_MS = 30;      // measured: a release lands 21-40 ms after its timer (2026-10-18, 15 casts)
+const PSI_NARROW_MIN_MS = 50;       // narrower zones cast without overloading even when aimed mid-zone
 
 // Bar fill time in seconds, tiers 1-5.
 PSI_BAR_SECONDS <- [2.0, 1.5, 1.0, 0.75, 0.4];
@@ -153,8 +155,15 @@ class PsiCast extends SqRootScript {
 		local aimMs = (PSI_ZONE_AIM * (barMs - startMs)).tointeger();
 		local holdMs = startMs + (aimMs > PSI_SAFETY_MS ? aimMs : PSI_SAFETY_MS) + PSI_VISIBLE_MS;
 		if (holdMs > barMs - PSI_SAFETY_MS) {
-			Say(name + ": overload zone too narrow to hit safely, casting immediately (" + basis + ")");
-			return PSI_QUICKFIRE_MS;
+			// Too narrow for the usual margins (tier 5 at low PSI): aim for the middle, allowing for the lag
+			// between the timer and the actual release. Under PSI_NARROW_MIN_MS even that is too risky.
+			if (barMs - startMs < PSI_NARROW_MIN_MS) {
+				Say(name + ": overload zone too narrow to hit safely, casting immediately (" + basis + ")");
+				return PSI_QUICKFIRE_MS;
+			}
+			holdMs = startMs + (barMs - startMs) / 2 - PSI_RELEASE_LAG_MS;
+			Say(name + ": narrow overload zone, aiming for its middle: holding " + holdMs + "ms (" + basis + ")");
+			return holdMs;
 		}
 		Say(name + ": overloading, holding " + holdMs + "ms (" + basis + ")");
 		return holdMs;
