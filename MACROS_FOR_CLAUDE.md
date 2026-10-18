@@ -117,10 +117,10 @@ summon_obj PsiChain
 
 This comes from the game's Overload Params table (`OLPARAM` in `shock2.gam`; SCP doesn't change it):
 - **Bar fill time by tier:** 2.0 / 1.5 / 1.0 / 0.75 / 0.4 s for tiers 1–5.
-- **Where the yellow zone starts, as a fraction of the bar,** for pre-overload PSI 1–8: 1.00 / 0.94 / 0.85 / 0.73 / 0.58 / 0.40 / 0.19 / 0.01.
+- **Where the yellow zone starts, as a fraction of the bar,** by base PSI (without implants): 1.00 for base PSI 1–2, then 0.94 / 0.85 / 0.73 / 0.58 / 0.40 / 0.19 for base PSI 3–8 (the game reads `OLPARAM` one step lower than its PSI 1–8 order).
 - **The zone** runs from (start fraction × bar time) to (bar time). Releasing after the bar is full is burnout.
-- **Conditional mode's hold** = zone start + max(10% of the zone's width, 50 ms) + 50 ms. If that comes within 50 ms of the end of the bar, it casts immediately instead.
-- **PSI** is the effective stat, capped to 1–8. Timing depends on tier and PSI only; every discipline in a tier is the same.
+- **Conditional mode's hold** = zone start + max(10% of the zone's width, 50 ms) + 50 ms. If that comes within 50 ms of the end of the bar, it aims for the middle of the zone minus 30 ms (release lag) instead; a zone under 50 ms wide casts immediately.
+- **PSI** is base PSI: implants don't count. Timing depends on tier and base PSI only; every discipline in a tier is the same.
 
 ## Hard rules
 
@@ -145,7 +145,7 @@ This comes from the game's Overload Params table (`OLPARAM` in `shock2.gam`; SCP
 
 - **After pressing the key,** the player types `condump` in the console (Ctrl+;). Search `condump.txt` for `[psi_autocast]`.
 - **An overload succeeded** if `OnOverloadSuccess` appears just before `released`.
-- **Each cast logs** its tier, pre-overload PSI, overload zone and decision. Chains log `chain: step N/M` and `chain: done`.
+- **Each cast logs** its tier, base PSI, overload zone and decision. Chains log `chain: step N/M` and `chain: done`.
 - **`condump.txt` is a 1,025-line ring buffer.** Once it wraps, the newest lines continue at the top of the file.
 - **If the amp comes out but nothing casts,** either the mod isn't enabled for this save (check `mod_list`) or the discipline isn't learned.
 

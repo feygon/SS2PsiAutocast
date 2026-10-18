@@ -148,7 +148,7 @@
 **On screen**
 - Open the console with Ctrl+;.
 - Cast Projected Cryokinesis with the overload script.
-- Zoom in on the console output: tier, pre-overload PSI, zone, decision, OnOverloadSuccess.
+- Zoom in on the console output: tier, base PSI, zone, decision, OnOverloadSuccess.
 - Optional: show a cast where the console says the discipline doesn't benefit from overload, and read the reason aloud.
 
 **Say**

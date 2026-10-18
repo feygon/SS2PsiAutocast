@@ -26,10 +26,10 @@
 - **Conditional overload** (no suffix):
   - **If overloading helps the discipline,** it holds fire just long enough to land in the yellow overload zone.
   - **If it doesn't,** it casts immediately and says so in the console.
-- **Console feedback:** every cast reports its tier, your pre-overload PSI, the overload zone in milliseconds, and the decision. Open the console with Ctrl+;.
+- **Console feedback:** every cast reports its tier, your base PSI, the overload zone in milliseconds, and the decision. Open the console with Ctrl+;.
   ```
-  [psi_autocast] T1_Projected_Cryokinesis: overloading, holding 1564ms (tier 1, pre-overload PSI 4, overload zone 1460-2000ms)
-  [psi_autocast] T1_Psychogenic_Agility doesn't benefit from an overload, so it's casting immediately (tier 1, pre-overload PSI 4, overload zone 1460-2000ms)
+  [psi_autocast] T1_Projected_Cryokinesis: overloading, holding 1564ms (tier 1, base PSI 5, overload zone 1460-2000ms)
+  [psi_autocast] T1_Psychogenic_Agility doesn't benefit from an overload, so it's casting immediately (tier 1, base PSI 5, overload zone 1460-2000ms)
   ```
 
 ## Requirements
@@ -78,18 +78,18 @@ The numbers come from the game's own **Overload Params** table (`OLPARAM` in `sh
 |---|---|---|---|---|---|
 | Bar fills in | 2.0 s | 1.5 s | 1.0 s | 0.75 s | 0.4 s |
 
-**Where the yellow zone starts, as a fraction of the bar, by PSI before casting.** Higher PSI widens the zone to the left.
+**Where the yellow zone starts, as a fraction of the bar, by base PSI** (your PSI without implants). Higher PSI widens the zone to the left. The game reads `OLPARAM`'s values one step lower than their PSI 1–8 order suggests, which is how the table below lines up.
 
-| PSI | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-|---|---|---|---|---|---|---|---|---|
-| Zone starts at | 1.00 | 0.94 | 0.85 | 0.73 | 0.58 | 0.40 | 0.19 | 0.01 |
+| Base PSI | 1–2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|
+| Zone starts at | 1.00 | 0.94 | 0.85 | 0.73 | 0.58 | 0.40 | 0.19 |
 
 **How the script uses them:**
 - **Overload zone** = from (zone start × bar time) to (bar time).
 - **Hold time** = zone start plus 10% of the zone's width (at least 50 ms), plus a flat 50 ms so the bar is visibly in the yellow before release.
-- **If that hold would come within 50 ms of the end of the bar** (low PSI on a high tier, or PSI 1, where there's no zone), the script casts immediately and says so.
-- **PSI is the effective value** shown on your stats screen, including implants and boosters, capped to 1–8. The +2 from an overload applies to that cast only.
-- **Example:** at PSI 4, a tier 1 discipline's zone runs from 1460 to 2000 ms, and the script holds 1564 ms (1460 + 54 + 50).
+- **If that hold would come within 50 ms of the end of the bar** (low PSI on a high tier), the script aims for the middle of the zone instead, 30 ms early to allow for the delay between its timer and the release. A zone under 50 ms wide (or none, at base PSI 1–2) casts immediately, and the console says so.
+- **PSI is your base PSI.** Implants don't change the overload window. The +2 from an overload applies to that cast only.
+- **Example:** at base PSI 5, a tier 1 discipline's zone runs from 1460 to 2000 ms, and the script holds 1564 ms (1460 + 54 + 50). A tier 5 discipline's zone runs from 292 to 400 ms, and the script holds 316 ms (the middle, 346, minus 30).
 
 Within a tier, every discipline shares the same timing. Whether a discipline gains anything from an overload is per discipline. The scripts follow the wiki's list of disciplines that benefit, shown in the [table below](#discipline-scripts).
 
