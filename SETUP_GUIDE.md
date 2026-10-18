@@ -1,6 +1,6 @@
 # Setup guide and troubleshooting: psi_autocast and psi_autocast_mfd
 
-**TLDR:** Install psi_autocast (one-key psi casting), optionally add psi_autocast_mfd (an in-game MFD that builds macros), enable both for your save from New Game → Mods, then bind keys once in `user.bnd` with the game closed: by script, or by hand. The troubleshooting table at the end covers every problem we've hit.
+**TLDR:** Install psi_autocast (one-key psi casting), optionally add psi_autocast_mfd (an in-game MFD that builds macros), and enable both for your save from New Game → Mods. With the MFD, it binds its own keys: **a restart is the most you'll ever have to do, with no manual edits if you don't want them.** Without it, bind keys once with the starter script or by hand. The troubleshooting table at the end covers every problem we've hit.
 
 ## Contents
 1. [What you need](#what-you-need)
@@ -42,14 +42,23 @@ Each save remembers its own mod list, so loading an old save directly won't turn
 
 ## Bind your keys
 
-Key bindings live in `user.bnd`, in your Saved Games folder above. **The game must be closed:** it rewrites the file when it exits, so edits made while it runs are lost. Scripts can't bind keys while the game runs, which is why this is a one-time step outside the game.
+Key bindings live in `user.bnd`, in your Saved Games folder above. The game reads it only when it starts.
 
-### The easy way: the setup scripts (GitHub)
+### With the MFD: nothing to do here
+
+- **First load:** if no key opens the MFD, it binds keypad * (or the next free key), and keypad + to psi_autocast's cancel if that's free, then tells you to restart the game once.
+- **Saving a macro on a free key** binds that key; restart once and it runs the macro.
+- **Saving on a key the game uses:** clear the key in Options > Controls first, then Save again and restart. The MFD never takes a key away from the game's own controls.
+- Before the MFD changes `user.bnd`, it backs it up as `user.bnd.mfd_backup`.
+
+The rest of this section is for psi_autocast without the MFD, or if you'd rather set keys up yourself. **Edit `user.bnd` only with the game closed:** leaving the Controls menu makes the game rewrite it.
+
+### The setup scripts (GitHub)
 
 Both are double-click `.bat` files. Each backs up `user.bnd` first, never changes a key you've already bound without asking, and lists what it bound. Run them from any folder. `starterPsiPowers.bat` is for psi_autocast on its own; `setupPsiMfd.bat` is for MFD users and includes the starter keys. If you add the MFD later, just run `setupPsiMfd.bat`: the MFD can edit the starter's G and J straight away, and the script also moves older starter bindings into those files.
 
 - **`starterPsiPowers.bat`** (psi_autocast's repo, `extras/`), for psi_autocast without the MFD: binds **G** to Projected Cryokinesis with automatic overload and **J** to Localized Pyrokinesis then your previous weapon, if those keys are free. Each key runs a one-line file in the save folder (`psi_macros\Macro_g.cmd`, `Macro_j.cmd`), so psi_autocast_mfd can replace it with a macro later.
-- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`), for MFD users: gives **G** and **J** the same two starter casts, as macros you can edit in the MFD (`Macro_g.cmd`, `Macro_j.cmd`); binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, then keypad and navigation keys). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. Last, it asks (y/n) whether the mouse wheel should scroll the MFD (see below); it asks only while the wheel still has the game's default bindings or none.
+- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`), for MFD users: gives **G** and **J** the same two starter casts, as macros you can edit in the MFD (`Macro_g.cmd`, `Macro_j.cmd`); binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, keypad and navigation keys, keypad numbers, arrows, and the punctuation keys `, . / ; ' [ ] \`). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. Last, it asks (y/n) whether the mouse wheel should scroll the MFD (see below); it asks only while the wheel still has the game's default bindings or none.
 
 ### By hand
 
@@ -59,7 +68,7 @@ Open `user.bnd` in Notepad, back it up, and add lines like these:
 bind g "run psi\T1_Projected_Cryokinesis_Quickfire.cmd"
 bind keypad_plus "run psi\actions\Cancel_Macro.cmd"
 bind keypad_star "summon_obj PsiMfd"
-bind keypad_minus "run user:/psi_macros\MacroKPMinus.cmd"
+bind keypad_minus "run user:/psi_macros\Macro_keypad_minus.cmd"
 ```
 
 - **A discipline key** runs one of the scripts in the game's `psi` folder (the psi_autocast readme lists them all).
@@ -80,7 +89,7 @@ In a save without psi_autocast_mfd enabled, the wheel then doesn't switch weapon
 
 - **psi_autocast:** press a discipline key. The psi amp comes out and the discipline casts; conditional-overload keys overload when the discipline benefits.
 - **The Macro Builder:** open `psi\Macro_Builder.html` in your browser to build chains outside the game.
-- **The MFD:** press keypad *. Pick a macro key at the top, click disciplines to add casts, **Save**, close it, and press the key. Leaving cursor mode (Tab) also closes it; unsaved edits are dropped.
+- **The MFD:** press keypad * (after the one restart it asks for). Pick a key with the arrows or from **Keys**, click disciplines to add casts, **Save**, close it, and press the key. Leaving cursor mode (Tab) also closes it; unsaved edits are dropped.
 - **The console** shows a line for every cast and macro step, which helps when something doesn't happen.
 
 ## Troubleshooting
@@ -91,9 +100,10 @@ In a save without psi_autocast_mfd enabled, the wheel then doesn't switch weapon
 | A key does nothing; the binding is there | The game may not accept that key name | Start and quit the game, then check the line is still in `user.bnd`; if it's gone, the game didn't accept the key, so use a different one |
 | The amp comes out but nothing casts | The mod isn't enabled for this save, or the discipline isn't learned | See "Enable the mods for your save"; the console warns about an unlearned discipline |
 | Weapon switching is stuck after a cast | The trigger is still held | Click once; then raise `psi_draw_ms` in that script |
-| Keypad * doesn't open the MFD | psi_autocast_mfd isn't enabled for this save, or the binding is missing | `mod_list` in the console; check `bind keypad_star "summon_obj PsiMfd"` |
+| Keypad * doesn't open the MFD | You haven't restarted since the MFD bound it, psi_autocast_mfd isn't enabled for this save, or another key opens it | Restart the game; `mod_list` in the console; the first-load message names the key it bound |
 | The MFD opens, then closes by itself | An MFD error | The console shows `[psi_mfd] error in ...`; report that line |
-| The MFD says "No macro keys bound" | No `user.bnd` line runs a `psi_macros` file | Run `setupPsiMfd.bat`, or add a macro key line by hand |
+| The MFD says "No macro keys bound" | No `user.bnd` line runs a `psi_macros` file yet | Click **Keys**, pick a free key and save a macro there, then restart |
+| A key you saved a macro on does nothing | You haven't restarted since the MFD bound it, or the game still uses the key | Restart; for a grey (game) key, clear it in Options > Controls, Save again in the MFD, then restart |
 | A saved macro key does nothing | The binding's file name differs from the one the MFD saved, or psi_autocast isn't enabled | Check the line in `user.bnd`; the MFD saves to the name the binding uses |
 | The console says "psi_autocast isn't loaded" | psi_autocast_mfd is enabled without psi_autocast | Enable psi_autocast for the save as well |
 | The wheel switches weapons over the MFD | The wheel isn't bound to the MFD | Run `setupPsiMfd.bat` and answer y to the wheel, or add the two wheel lines by hand |
