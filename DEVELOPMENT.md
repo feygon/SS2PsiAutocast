@@ -83,6 +83,8 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 ## Engine facts
 
 **Bindings and console:**
+- **`run` ignores the file extension (2026-10-18).** `run psi\zz_ext_test.txt` and `run user:/psi_macros\zz_ext_test.txt`, each holding `set psi_txt_test …`, both ran (`setting 'psi_txt_test' to '…'` in the condump). So key files could be `.txt` instead of `.cmd`. A missing file prints nothing.
+- **`echo` prints nothing** to the console or condump (a `.txt` file holding only `echo …` ran without output). Use `set <name> <value>` to prove a file ran: every `set` logs `setting '<name>' to '<value>'`.
 - **Two binding systems.** The console's `bind`, `listbinds` and `unbindkey` belong to KEX and are stored in `kexengine.cfg`. Binds made there never triggered game commands. Game controls live in `user.bnd`.
 - **`user.bnd` limits:**
   - **One command per binding.** Semicolons don't chain.
