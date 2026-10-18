@@ -1,0 +1,7 @@
+set psi_name T3_Neural_Toxin_Blocker_Quickfire
+set psi_power 20
+set psi_slot 0
+set psi_benefits 0
+run psi\lib\T3.txt
+run psi\lib\quickfire.txt
+run psi\lib\draw_cast.txt

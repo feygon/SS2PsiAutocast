@@ -156,7 +156,7 @@
       <li>Start the game and press the key. The console (Ctrl+;) reports each step.</li>
     </ol>
     <p class="hint">Once the binding exists, you can edit the macro file while the game runs. The next keypress uses the new version.</p>
-    <p class="hint"><b>To stop a macro partway through,</b> bind a cancel key too: <code>bind &lt;key&gt; "run psi\actions\Cancel_Macro.cmd"</code>. It skips the rest of the running macro. A cast that is mid-charge is released, so it casts at normal strength, or fizzles if the charge has only just started.</p>
+    <p class="hint"><b>To stop a macro partway through,</b> bind a cancel key too: <code>bind &lt;key&gt; "run psi\actions\Cancel_Macro.txt"</code>. It skips the rest of the running macro. A cast that is mid-charge is released, so it casts at normal strength, or fizzles if the charge has only just started.</p>
   </section>
 </main>
 
@@ -392,7 +392,7 @@ function setFinalWeapon() {
   const value = $("finalWeapon").value;
   const weapon = value === "last" ? { token: "last", label: "Previous weapon" } : WEAPONS.find(w => w.name === value);
   state.finalWeapon = {
-    // weapon:<Name> runs psi\actions\Switch_To_<Name>.cmd, named from the weapon's label.
+    // weapon:<Name> runs psi\actions\Switch_To_<Name>.txt, named from the weapon's label.
     token: value === "last" ? "last" : "weapon:" + weapon.label.replace(/ /g, "_"),
     label: value === "last" ? "Switch back to the previous weapon" : "Switch to " + weapon.label,
     short: value === "last" ? "Previous_Weapon" : weapon.label.replace(/ /g, "_"),
@@ -630,8 +630,8 @@ function renderOutput() {
   if ($("autoHypo").checked) lines.push("set psi_auto_hypo_wait_ms " + REFIRE_MS);
   lines.push("set psi_chain_gap_ms " + REFIRE_MS, "summon_obj PsiChain");
   $("macroText").textContent = lines.join("\n");
-  $("savePath").textContent = "psi\\chains\\" + name + ".cmd";
-  $("bindText").textContent = "bind " + key + " \"run psi\\chains\\" + name + ".cmd\"";
+  $("savePath").textContent = "psi\\chains\\" + name + ".txt";
+  $("bindText").textContent = "bind " + key + " \"run psi\\chains\\" + name + ".txt\"";
   $("bindSearch").textContent = "bind " + key + " ";
   $("nameHint").textContent = state.nameTouched ? "" : "Named from the steps. Type your own to change it.";
 }
@@ -648,7 +648,7 @@ async function copyText(text, statusEl, what) {
 }
 
 function download() {
-  const name = $("macroName").value + ".cmd";
+  const name = $("macroName").value + ".txt";
   const blob = new Blob([$("macroText").textContent + "\n"], { type: "text/plain" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);

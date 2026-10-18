@@ -4,8 +4,8 @@
     py make_keys.py --inline  key files contain the parts' lines directly (if nested run is unavailable)
 
 Each discipline gets two files:
-    T<tier>_<Name>_Quickfire.cmd  draw if needed, cast immediately
-    T<tier>_<Name>.cmd            draw if needed, overload if the discipline benefits, else cast immediately
+    T<tier>_<Name>_Quickfire.txt  draw if needed, cast immediately
+    T<tier>_<Name>.txt            draw if needed, overload if the discipline benefits, else cast immediately
 """
 import argparse
 import json
@@ -102,7 +102,11 @@ BUILDER_WEAPONS_MARKER = "/*WEAPONS*/"
 
 DRAW_MS = 800
 
-# The parts. Each is a .cmd file in psi\lib\ that sets one aspect of a cast.
+# Key files are .txt: the game's run command ignores the extension (verified in game 2026-10-18), Nexus
+# quarantined zips full of .cmd files, and double-clicking a .cmd runs it in Windows. Earlier versions used .cmd.
+EXT = ".txt"
+
+# The parts. Each is a key file in psi\lib\ that sets one aspect of a cast.
 LIB_PARTS = {
     **{f"T{tier}": [f"set psi_tier {tier}"] for tier in range(1, 6)},
     "quickfire": ["set psi_mode 0"],
@@ -128,7 +132,7 @@ def key_file_lines(power, name, benefits, mode_part, inline):
         f"set psi_benefits {1 if benefits else 0}",
     ]
     for part in (f"T{tier_of(power)}", mode_part, "draw_cast"):
-        lines += LIB_PARTS[part] if inline else [f"run psi\\lib\\{part}.cmd"]
+        lines += LIB_PARTS[part] if inline else [f"run psi\\lib\\{part}{EXT}"]
     return stem, lines
 
 
@@ -142,7 +146,7 @@ def discipline_table(with_ids):
     rows = [("| `psi_power` " if with_ids else "") + head, ("|---" if with_ids else "") + rule]
     for power, name, benefits in DISCIPLINES:
         stem = file_stem(power, name)
-        row = f"| {tier_of(power)} | {name} | {'Yes' if benefits else 'No'} | `{stem}.cmd` | `{stem}_Quickfire.cmd` |"
+        row = f"| {tier_of(power)} | {name} | {'Yes' if benefits else 'No'} | `{stem}{EXT}` | `{stem}_Quickfire{EXT}` |"
         rows.append((f"| {power} " if with_ids else "") + row)
     return "\n".join(rows)
 
@@ -155,34 +159,53 @@ def write_script_data():
     ]
     for power, name, benefits in DISCIPLINES:
         lines.append(f'ND.psiDisciplines[{power}] <- {{ name = "{file_stem(power, name)}", benefits = {1 if benefits else 0} }};')
-    # Weapon types for "previous weapon"; each has psi\actions\equip\<name, underscores>.cmd.
+    # Weapon types for "previous weapon"; each has psi\actions\equip\<name, underscores>.txt.
     names = ", ".join(f'"{name}"' for _, name in WEAPONS)
     lines.append(f"ND.psiWeaponArchetypes <- [{names}];")
+    # Every key file psi_autocast ships (lower case, under psi\, no extension). The 1.4 migration renames a
+    # player's "run psi\X.cmd" binding to .txt only when X is in this list: other files stay as they are.
+    lines.append("ND.psiKeyFiles <- {")
+    for path in shipped_key_files():
+        lines.append(f'\t["{path.replace(chr(92), chr(92) * 2)}"] = true,')
+    lines.append("};")
     write(SCRIPT_DATA, lines)
+
+
+def shipped_key_files():
+    """Lower-case paths under psi\\ (no extension) of every key file make_keys writes, plus the chains folder."""
+    paths = [f"lib\\{part.lower()}" for part in LIB_PARTS]
+    for power, name, _ in DISCIPLINES:
+        stem = file_stem(power, name).lower()
+        paths += [stem, stem + "_quickfire"]
+    paths += ["actions\\arm_psi_amp", "actions\\use_psi_hypo", "actions\\cancel_macro", "actions\\switch_to_previous_weapon"]
+    paths += [f"actions\\switch_to_{display.replace(' ', '_').lower()}" for display, _ in WEAPONS]
+    paths += [f"actions\\equip\\{name.replace(' ', '_').lower()}" for _, name in WEAPONS]
+    paths += [f"chains\\{p.stem.lower()}" for p in (KEYS_DIR / "chains").glob(f"*{EXT}")]
+    return sorted(set(paths))
 
 
 def write_actions():
     """One-line action scripts, usable on their own key: psi hypo and weapon switches."""
     ACTIONS_DIR.mkdir(parents=True, exist_ok=True)
-    for old in ACTIONS_DIR.glob("*.cmd"):
+    for old in [*ACTIONS_DIR.glob("*.cmd"), *ACTIONS_DIR.glob(f"*{EXT}")]:
         old.unlink()
     # The chain runs these files rather than sending the commands itself: Debug.Command goes through
     # the console, which splits arguments at spaces ("equip_weapon psi amp" becomes "equip_weapon psi").
-    write(ACTIONS_DIR / "Arm_Psi_Amp.cmd", ["equip_weapon psi amp"])
-    write(ACTIONS_DIR / "Use_Psi_Hypo.cmd", ["use_obj psi booster"])
-    write(ACTIONS_DIR / "Cancel_Macro.cmd", ["summon_obj PsiCancel"])
+    write(ACTIONS_DIR / f"Arm_Psi_Amp{EXT}", ["equip_weapon psi amp"])
+    write(ACTIONS_DIR / f"Use_Psi_Hypo{EXT}", ["use_obj psi booster"])
+    write(ACTIONS_DIR / f"Cancel_Macro{EXT}", ["summon_obj PsiCancel"])
     # Not last_weapon: that skipped back past the weapon held before the macro drew the amp.
-    write(ACTIONS_DIR / "Switch_To_Previous_Weapon.cmd", ["summon_obj PsiPreviousWeapon"])
+    write(ACTIONS_DIR / f"Switch_To_Previous_Weapon{EXT}", ["summon_obj PsiPreviousWeapon"])
     for display, name in WEAPONS:
-        write(ACTIONS_DIR / f"Switch_To_{display.replace(' ', '_')}.cmd", [f"equip_weapon {name}"])
+        write(ACTIONS_DIR / f"Switch_To_{display.replace(' ', '_')}{EXT}", [f"equip_weapon {name}"])
 
-    # Used by "previous weapon": psi\actions\equip\<equip name, underscores>.cmd
+    # Used by "previous weapon": psi\actions\equip\<equip name, underscores>.txt
     equip_dir = ACTIONS_DIR / "equip"
     equip_dir.mkdir(exist_ok=True)
-    for old in equip_dir.glob("*.cmd"):
+    for old in [*equip_dir.glob("*.cmd"), *equip_dir.glob(f"*{EXT}")]:
         old.unlink()
     for _, name in WEAPONS:
-        write(equip_dir / f"{name.replace(' ', '_')}.cmd", [f"equip_weapon {name}"])
+        write(equip_dir / f"{name.replace(' ', '_')}{EXT}", [f"equip_weapon {name}"])
 
 
 def write_builder():
@@ -224,14 +247,16 @@ def main():
 
     LIB_DIR.mkdir(parents=True, exist_ok=True)
     for part, lines in LIB_PARTS.items():
-        write(LIB_DIR / f"{part}.cmd", lines)
+        write(LIB_DIR / f"{part}{EXT}", lines)
+    for old in LIB_DIR.glob("*.cmd"):
+        old.unlink()
 
-    for old in KEYS_DIR.glob("*.cmd"):
+    for old in [*KEYS_DIR.glob("*.cmd"), *KEYS_DIR.glob(f"*{EXT}")]:
         old.unlink()
     for power, name, benefits in DISCIPLINES:
         for mode_part in ("overload", "quickfire"):
             stem, lines = key_file_lines(power, name, benefits, mode_part, args.inline)
-            write(KEYS_DIR / f"{stem}.cmd", lines)
+            write(KEYS_DIR / f"{stem}{EXT}", lines)
 
     update_table(README, with_ids=False)
     update_table(CLAUDE_GUIDE, with_ids=True)

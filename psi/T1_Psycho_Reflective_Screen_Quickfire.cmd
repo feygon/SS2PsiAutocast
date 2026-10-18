@@ -1,7 +1,0 @@
-set psi_name T1_Psycho_Reflective_Screen_Quickfire
-set psi_power 1
-set psi_slot 0
-set psi_benefits 0
-run psi\lib\T1.cmd
-run psi\lib\quickfire.cmd
-run psi\lib\draw_cast.cmd

@@ -1,0 +1,7 @@
+set psi_name T5_Soma_Transference_Quickfire
+set psi_power 34
+set psi_slot 0
+set psi_benefits 1
+run psi\lib\T5.txt
+run psi\lib\quickfire.txt
+run psi\lib\draw_cast.txt

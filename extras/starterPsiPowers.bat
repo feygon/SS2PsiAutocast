@@ -8,13 +8,13 @@ rem kept. Older versions of this script bound G and J straight to the psi script
 rem Any other binding on G or J is left alone. Backs up user.bnd before changing it. Run it with the game closed.
 setlocal
 
-set "G_RUN=run psi\T1_Projected_Cryokinesis.cmd"
-set "J_RUN=run psi\chains\Starter_Localized_Pyrokinesis.cmd"
+set "G_RUN=run psi\T1_Projected_Cryokinesis.txt"
+set "J_RUN=run psi\chains\Starter_Localized_Pyrokinesis.txt"
 set "G_LINE=bind g "run user:/psi_macros\Macro_g.cmd""
 set "J_LINE=bind j "run user:/psi_macros\Macro_j.cmd""
 rem The direct lines, offered when G or J has the player's own binding (they need no file).
-set "G_DIRECT=bind g "run psi\T1_Projected_Cryokinesis.cmd""
-set "J_DIRECT=bind j "run psi\chains\Starter_Localized_Pyrokinesis.cmd""
+set "G_DIRECT=bind g "run psi\T1_Projected_Cryokinesis.txt""
+set "J_DIRECT=bind j "run psi\chains\Starter_Localized_Pyrokinesis.txt""
 
 rem Windows tools are called so a Unix "find" on the PATH (Git for Windows puts one there) can't take over:
 rem findstr has no Unix namesake, and find.exe is called by its full path.
@@ -61,9 +61,10 @@ set ADD_G=0
 set ADD_J=0
 set OLD_G=0
 set OLD_J=0
-rem \\ in a findstr /c: string matches one backslash.
-call :check g "psi\\T1_Projected_Cryokinesis.cmd" ADD_G G_DIRECT OLD_G
-call :check j "psi\\chains\\Starter_Localized_Pyrokinesis.cmd" ADD_J J_DIRECT OLD_J
+rem \\ in a findstr /c: string matches one backslash. The pattern ends at the dot, so it matches the .cmd lines
+rem of psi_autocast 1.3 and earlier as well as .txt (and not the _Quickfire scripts).
+call :check g "psi\\T1_Projected_Cryokinesis." ADD_G G_DIRECT OLD_G
+call :check j "psi\\chains\\Starter_Localized_Pyrokinesis." ADD_J J_DIRECT OLD_J
 if "%ADD_G%%ADD_J%"=="00" (
     echo Nothing to add. user.bnd is unchanged.
     goto :end

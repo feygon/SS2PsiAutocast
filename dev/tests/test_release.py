@@ -35,7 +35,14 @@ def git(*args):
 
 
 def key_files():
-    return sorted(PSI.rglob("*.cmd"))
+    return sorted(PSI.rglob("*.txt"))
+
+
+def test_no_cmd_files_ship():
+    """WHY: 1.4 renamed every key file to .txt: Nexus quarantined zips full of .cmd files, and double-clicking a .cmd
+    runs it in Windows. `run` ignores the extension (verified in game 2026-10-18), so nothing needs .cmd."""
+    assert not list(PSI.rglob("*.cmd"))
+    assert len(key_files()) == 110
 
 
 def test_make_keys_is_idempotent():
@@ -83,8 +90,8 @@ def test_two_scripts_per_discipline():
     names = re.findall(r'ND\.psiDisciplines\[(\d+)\] <- \{ name = "([^"]+)"', data)
     assert len(names) == 35
     for _, name in names:
-        assert (PSI / f"{name}.cmd").exists(), name
-        assert (PSI / f"{name}_Quickfire.cmd").exists(), name
+        assert (PSI / f"{name}.txt").exists(), name
+        assert (PSI / f"{name}_Quickfire.txt").exists(), name
 
 
 def test_overload_flags_match_the_wiki():
@@ -115,7 +122,7 @@ def test_release_zip_matches_its_tag():
         pytest.skip(f"{zip_path.name} not built (py build.py --package)")
     z = zipfile.ZipFile(zip_path)
     names = z.namelist()
-    assert not [n for n in names if n.lower().endswith((".bat", ".exe", ".dll", ".ps1"))]
+    assert not [n for n in names if n.lower().endswith((".bat", ".exe", ".dll", ".ps1", ".cmd"))]
     kpf = zipfile.ZipFile(io.BytesIO(z.read("mods/psi_autocast.kpf")))
     for member in kpf.namelist():
         assert kpf.read(member) == tagged(tag, f"mod/{member}"), member
@@ -173,8 +180,8 @@ def test_bat_binds_free_keys(tmp_path):
     # Bound through files in the save folder (the names psi_autocast_mfd uses), so the MFD can edit them later.
     assert 'bind g "run user:/psi_macros\\Macro_g.cmd"' in bindings(tmp_path)
     assert 'bind j "run user:/psi_macros\\Macro_j.cmd"' in bindings(tmp_path)
-    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.cmd"]
-    assert macro(tmp_path, "j") == ["run psi\\chains\\Starter_Localized_Pyrokinesis.cmd"]
+    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.txt"]
+    assert macro(tmp_path, "j") == ["run psi\\chains\\Starter_Localized_Pyrokinesis.txt"]
     assert (tmp_path / "user.bnd.before_starter_1").exists()
 
 
@@ -223,7 +230,7 @@ def test_bat_upgrades_its_old_direct_bindings(tmp_path):
     assert [l for l in b if l.startswith("bind g ")] == ['bind g "run user:/psi_macros\\Macro_g.cmd"']
     assert [l for l in b if l.startswith("bind j ")] == ['bind j "run user:/psi_macros\\Macro_j.cmd"']
     assert 'bind k "keep"' in b
-    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.cmd"]
+    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.txt"]
 
 
 # ---- overload window -----------------------------------------------------------------------------------
@@ -283,3 +290,55 @@ def test_narrow_zones_are_aimed_at_their_middle():
     for measured in RELEASE_LAGS_MS:
         assert start + 20 <= hold + measured <= bar - 20, measured
     assert re.search(r"barMs - startMs < PSI_NARROW_MIN_MS", code)
+
+
+# ---- 1.3 -> 1.4: .cmd bindings move to .txt ----------------------------------------------------------------
+
+def shipped_key_files():
+    """ND.psiKeyFiles from the generated data file: lower-case paths under psi\\, without extension."""
+    data = (REPO / "mod/sq_scripts/psi_autocast_disciplines.nut").read_text(encoding="utf-8")
+    body = re.search(r"ND\.psiKeyFiles <- \{(.*?)\};", data, re.S)
+    assert body, "ND.psiKeyFiles missing"
+    return {k.replace("\\\\", "\\") for k in re.findall(r'\["([^"]+)"\] = true', body.group(1))}
+
+
+def to_txt(text, ours):
+    """The twin of PsiToTxt: 'run psi\\<file>.cmd' becomes .txt only when <file> is one psi_autocast ships."""
+    def repl(m):
+        return m.group(1) + (".txt" if m.group(2).lower() in ours else m.group(3))
+    return re.sub(r"(run psi\\([^\r\n\"]*?))(\.cmd)", repl, text, flags=re.I)
+
+
+def test_key_file_list_matches_the_psi_folder():
+    """WHY: The migration only renames bindings to files in this list; it must be exactly the files that ship."""
+    on_disk = {p.relative_to(PSI).with_suffix("").as_posix().lower().replace("/", "\\") for p in key_files()}
+    assert shipped_key_files() == on_disk
+
+
+def test_only_our_bindings_move_to_txt():
+    """
+    WHY: Players' user.bnd lines (and the save-folder macro files they run) point at the old .cmd names; without
+    moving them, every psi_autocast key would stop working after the update. Only files psi_autocast ships are
+    renamed: a chain the player saved from the Macro Builder (psi\\chains\\<name>.cmd), other mods' files and
+    MFD macro files keep their names, because those files stay .cmd.
+    """
+    ours = shipped_key_files()
+    before = ('bind g "run psi\\t1_projected_cryokinesis_quickfire.cmd"\r\n'
+              'bind keypad_plus "run psi\\actions\\Cancel_Macro.CMD"\r\n'
+              'bind j "run psi\\chains\\Starter_Localized_Pyrokinesis.cmd"\r\n'
+              'bind k "run psi\\chains\\My_Own_Chain.cmd"\r\n'
+              'bind l "run othermod\\thing.cmd"\r\n'
+              'bind o "run user:/psi_macros\\Macro_o.cmd"\r\n'
+              'bind t wpn_setting_toggle\r\n')
+    after = to_txt(before, ours)
+    assert 'bind g "run psi\\t1_projected_cryokinesis_quickfire.txt"' in after
+    assert 'bind keypad_plus "run psi\\actions\\Cancel_Macro.txt"' in after
+    assert 'bind j "run psi\\chains\\Starter_Localized_Pyrokinesis.txt"' in after
+    for line in ['bind k "run psi\\chains\\My_Own_Chain.cmd"', 'bind l "run othermod\\thing.cmd"',
+                 'bind o "run user:/psi_macros\\Macro_o.cmd"', 'bind t wpn_setting_toggle']:
+        assert line in after, line
+    assert to_txt(after, ours) == after, "running it again changes nothing"
+    code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")
+    for name in ["PsiToTxt", "PsiMigrateBindings"]:
+        assert f"function {name}(" in code, name
+    assert "ND.psiKeyFiles" in code and "OnFrameUpdate" in code and 'Say("couldn\'t update' in code

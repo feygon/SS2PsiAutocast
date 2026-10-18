@@ -1,7 +1,0 @@
-set psi_name T5_External_Psionic_Detonation
-set psi_power 38
-set psi_slot 0
-set psi_benefits 0
-run psi\lib\T5.cmd
-run psi\lib\overload.cmd
-run psi\lib\draw_cast.cmd

@@ -1,8 +1,8 @@
 // psi_autocast: one-key psi casting.
 //
-// A key's .cmd file sets config values, then summons a PsiCast helper and equips the amp.
+// A key file (psi\*.txt) sets config values, then summons a PsiCast helper and equips the amp.
 // The helper waits for the amp if it wasn't already in hand, selects the power, presses fire,
-// releases after the hold time, then deletes itself. It exists because .cmd files cannot pause:
+// releases after the hold time, then deletes itself. It exists because key files cannot pause:
 // a press and release in the same frame cancels the cast.
 //
 // Settings (see psi\lib\ for the parts that set them):
@@ -47,12 +47,12 @@ function PsiAmpInHand() {
 // "Previous weapon": the weapon in hand just before a macro drew the amp. The game's own
 // last_weapon doesn't count an equip_weapon switch, so it went one weapon further back (the
 // wrench instead of the pistol). So the macro remembers ShockGame.Equipped(0) and switches back
-// through the normal path: psi\actions\equip\<archetype>.cmd, which runs equip_weapon.
+// through the normal path: psi\actions\equip\<archetype>.txt, which runs equip_weapon.
 // Not ShockGame.Equip(0, weapon): in game that left the amp unequippable, even by hand,
 // until the save was reloaded.
 ND.psiWeaponBeforeArm <- 0;
 
-// "Assault Rifle" -> "assault_rifle": the file name of psi\actions\equip\<name>.cmd.
+// "Assault Rifle" -> "assault_rifle": the file name of psi\actions\equip\<name>.txt.
 function PsiFileSafe(text) {
 	local result = "";
 	foreach (ch in text.tolower())
@@ -82,11 +82,11 @@ function PsiSwitchToRememberedWeapon() {
 	}
 	if (equipName == null)
 		equipName = ShockGame.GetArchetypeName(weapon);
-	Debug.Command("run psi\\actions\\equip\\" + PsiFileSafe(equipName) + ".cmd");
+	Debug.Command("run psi\\actions\\equip\\" + PsiFileSafe(equipName) + ".txt");
 	return "switch back to the previous weapon (" + equipName + ")";
 }
 
-// PsiPreviousWeapon: the standalone "switch back to previous weapon" (psi\actions\Switch_To_Previous_Weapon.cmd).
+// PsiPreviousWeapon: the standalone "switch back to previous weapon" (psi\actions\Switch_To_Previous_Weapon.txt).
 class PsiPreviousWeapon extends SqRootScript {
 	function OnBeginScript() {
 		SetOneShotTimer("Switch", 0.01);
@@ -249,7 +249,7 @@ ND.psiPendingCast <- null;
 // and stops at its next timer if it has changed.
 ND.psiCancelCount <- 0;
 
-// PsiCancel: stops any running macro.  summon_obj PsiCancel  (psi\actions\Cancel_Macro.cmd)
+// PsiCancel: stops any running macro.  summon_obj PsiCancel  (psi\actions\Cancel_Macro.txt)
 // A cast that is mid-charge is released, so it casts at normal strength (or fizzles if the
 // charge has only just started); everything after it is skipped.
 class PsiCancel extends SqRootScript {
@@ -277,12 +277,12 @@ class PsiCancel extends SqRootScript {
 //   <id>o    cast discipline <id>, overloading if it benefits (conditional overload)
 //   <id>q    cast discipline <id> immediately (quickfire)
 //   w<ms>    wait <ms> milliseconds
-//   hypo     use a psi hypo (runs psi\actions\Use_Psi_Hypo.cmd)
+//   hypo     use a psi hypo (runs psi\actions\Use_Psi_Hypo.txt)
 //   last     switch back to the weapon held before the amp was drawn (PsiSwitchToRememberedWeapon)
-//   weapon:<Name>  switch weapon by running psi\actions\Switch_To_<Name>.cmd (weapon:Assault_Rifle)
+//   weapon:<Name>  switch weapon by running psi\actions\Switch_To_<Name>.txt (weapon:Assault_Rifle)
 // Steps whose commands take multi-word arguments run action files: Debug.Command goes through the
 // console, which splits at spaces, so "equip_weapon psi amp" sent directly becomes "equip_weapon psi".
-//   <name>   run psi\<name>.cmd (a discipline script, which draws the amp itself)
+//   <name>   run psi\<name>.txt (a discipline script, which draws the amp itself)
 // Inline casts (<id>o / <id>q) never draw the amp: without an arm step the amp must already be in hand.
 const PSI_CHAIN_POLL_S = 0.05;
 const PSI_CHAIN_TIMEOUT_MS = 5000;  // longest a cast may take before the chain gives up
@@ -367,7 +367,7 @@ class PsiChain extends SqRootScript {
 		SetData("CancelAt", ND.psiCancelCount);
 		SetData("GapMs", CfgInt("psi_chain_gap_ms", PSI_REFIRE_MS));
 		Say(steps.len() + " steps: " + list.tostring());
-		// Never run commands from OnBeginScript: it runs while the chain's .cmd file is still being
+		// Never run commands from OnBeginScript: it runs while the chain's key file is still being
 		// read, and a run from here re-enters that file (endless PsiChain creation, stack overflow).
 		SetOneShotTimer("ChainStart", 0.01);
 	}
@@ -418,7 +418,7 @@ class PsiChain extends SqRootScript {
 				local drawMs = CfgInt("psi_draw_ms", 800);
 				Say(label + "arm - drawing the psi amp, waiting " + drawMs + "ms");
 				PsiRememberWeapon();
-				Debug.Command("run psi\\actions\\Arm_Psi_Amp.cmd");
+				Debug.Command("run psi\\actions\\Arm_Psi_Amp.txt");
 				SetOneShotTimer("ChainNext", drawMs / 1000.0);
 			}
 			return;
@@ -426,7 +426,7 @@ class PsiChain extends SqRootScript {
 
 		if (step == "hypo") {
 			Say(label + "use psi hypo");
-			Debug.Command("run psi\\actions\\Use_Psi_Hypo.cmd");
+			Debug.Command("run psi\\actions\\Use_Psi_Hypo.txt");
 			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
@@ -440,7 +440,7 @@ class PsiChain extends SqRootScript {
 		if (step.len() > 7 && step.slice(0, 7) == "weapon:") {
 			local weapon = step.slice(7);
 			Say(label + "switch to " + PsiUnderscoresToSpaces(weapon));
-			Debug.Command("run psi\\actions\\Switch_To_" + weapon + ".cmd");
+			Debug.Command("run psi\\actions\\Switch_To_" + weapon + ".txt");
 			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
@@ -462,7 +462,7 @@ class PsiChain extends SqRootScript {
 				+ " (max - " + restore + ", what a hypo restores on this difficulty"
 				+ (ShockGame.HasTrait("Player", eTrait.kTraitPharmo) ? " with Pharmo-Friendly" : "")
 				+ "), using a psi hypo first, then waiting " + waitMs + "ms");
-			Debug.Command("run psi\\actions\\Use_Psi_Hypo.cmd");
+			Debug.Command("run psi\\actions\\Use_Psi_Hypo.txt");
 			SetData("AutoHypoFor", index);
 			SetOneShotTimer("ChainRetry", waitMs / 1000.0);
 			return;
@@ -490,7 +490,7 @@ class PsiChain extends SqRootScript {
 		}
 		else {
 			Say(label + step);
-			Debug.Command("run psi\\" + step + ".cmd");
+			Debug.Command("run psi\\" + step + ".txt");
 		}
 		SetOneShotTimer("ChainPoll", PSI_CHAIN_POLL_S);
 	}
@@ -533,3 +533,132 @@ ND.Archetype("PsiCast", "ND", function(){ AddScript("PsiCast"); });
 ND.Archetype("PsiChain", "ND", function(){ AddScript("PsiChain"); });
 ND.Archetype("PsiCancel", "ND", function(){ AddScript("PsiCancel"); });
 ND.Archetype("PsiPreviousWeapon", "ND", function(){ AddScript("PsiPreviousWeapon"); });
+
+// 1.4 renamed psi_autocast's key files from .cmd to .txt (the game's run command ignores the extension). A
+// player's bindings made for 1.3 or earlier still say "run psi\X.cmd"; on the first load each session they are
+// moved to .txt - only for files psi_autocast ships (ND.psiKeyFiles), so the player's own chains and other mods'
+// files keep their names. The same goes for psi\ lines in the save-folder macro files those bindings run (the
+// starter keys' Macro_g.cmd). user.bnd is backed up first; the game reads it only at startup, so it asks for one
+// restart. Files are read and written through user:/\sq_cache\, the save folder (see psi_autocast_mfd).
+const PSI_SAVE_ROOT = "user:/\\sq_cache\\";
+
+function PsiReadText(path) {
+	local input = ::file(path, "rb");   // binary: text mode trips a KEX assert; ::file, not a member named file
+	local text = "";
+	while (!input.eos())
+		text += input.readn('c').tochar();
+	input.close();
+	return text;
+}
+
+function PsiWriteText(path, text) {
+	local output = ::file(path, "w");
+	foreach (c in text)
+		output.writen(c, 'c');
+	output.close();
+}
+
+// text with "run psi\<file>.cmd" changed to .txt wherever <file> is one psi_autocast ships (any case).
+function PsiToTxt(text) {
+	local lower = text.tolower();
+	local out = "";
+	local pos = 0;
+	while (true) {
+		local at = lower.find("run psi\\", pos);
+		if (at == null)
+			break;
+		local name = at + 8;
+		local stop = name;
+		while (stop < lower.len() && lower[stop] != '"' && lower[stop] != '\r' && lower[stop] != '\n')
+			stop++;
+		local path = lower.slice(name, stop);
+		if (path.len() > 4 && path.slice(-4) == ".cmd" && (path.slice(0, -4) in ND.psiKeyFiles)) {
+			out += text.slice(pos, stop - 4) + ".txt";
+			pos = stop;
+		}
+		else {
+			out += text.slice(pos, name);
+			pos = name;
+		}
+	}
+	return out + text.slice(pos);
+}
+
+// The save-folder macro files user.bnd runs: "run user:/psi_macros\<name>" -> "psi_macros\<name>".
+function PsiMacroFiles(bnd) {
+	local files = [];
+	local lower = bnd.tolower();
+	local marker = "run user:/psi_macros\\";
+	local pos = 0;
+	while (true) {
+		local at = lower.find(marker, pos);
+		if (at == null)
+			break;
+		local name = at + marker.len();
+		local stop = name;
+		while (stop < lower.len() && lower[stop] != '"' && lower[stop] != '\r' && lower[stop] != '\n')
+			stop++;
+		local file = lower.slice(name, stop);
+		if (file != "" && file.find("\\") == null && file.find("/") == null && file.find("..") == null)
+			files.push("psi_macros\\" + file);
+		pos = stop;
+	}
+	return files;
+}
+
+function PsiMigrateBindings() {
+	local bnd = PsiReadText(PSI_SAVE_ROOT + "user.bnd");
+	local changed = 0;
+	foreach (file in PsiMacroFiles(bnd)) {
+		local text;
+		try {
+			text = PsiReadText(PSI_SAVE_ROOT + file);
+		}
+		catch (e) {
+			continue;   // a macro key with no file yet
+		}
+		local updated = PsiToTxt(text);
+		if (updated != text) {
+			PsiWriteText(PSI_SAVE_ROOT + file, updated);
+			changed++;
+		}
+	}
+	local updated = PsiToTxt(bnd);
+	if (updated != bnd) {
+		PsiWriteText(PSI_SAVE_ROOT + "user.bnd.psi_backup", bnd);
+		PsiWriteText(PSI_SAVE_ROOT + "user.bnd", updated);
+		changed++;
+	}
+	if (changed) {
+		local message = "psi_autocast 1.4: your psi key bindings now use the .txt key files. Restart the game once.";
+		print("[psi_autocast] " + message);
+		try {
+			ShockGame.AddText(message, "Player", 15000);
+		}
+		catch (e) {}
+	}
+}
+
+// Runs the migration once per session, from the first frame (the player exists by then, for AddText).
+class PsiMigrationHandler {
+	m_name = "PsiMigrationHandler";
+	m_done = false;
+
+	function Say(text) {
+		print("[psi_autocast] " + text);
+	}
+
+	function OnFrameUpdate(deltaTime) {
+		if (m_done)
+			return;
+		m_done = true;
+		try {
+			PsiMigrateBindings();
+		}
+		catch (e) {
+			Say("couldn't update key bindings for 1.4: " + e);
+		}
+	}
+}
+
+ND.g_PlayerCore.AddHandler(PsiMigrationHandler());

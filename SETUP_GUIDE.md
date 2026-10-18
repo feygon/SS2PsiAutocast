@@ -65,8 +65,8 @@ Both are double-click `.bat` files. Each backs up `user.bnd` first, never change
 Open `user.bnd` in Notepad, back it up, and add lines like these:
 
 ```
-bind g "run psi\T1_Projected_Cryokinesis_Quickfire.cmd"
-bind keypad_plus "run psi\actions\Cancel_Macro.cmd"
+bind g "run psi\T1_Projected_Cryokinesis_Quickfire.txt"
+bind keypad_plus "run psi\actions\Cancel_Macro.txt"
 bind keypad_star "summon_obj PsiMfd"
 bind keypad_minus "run user:/psi_macros\Macro_keypad_minus.cmd"
 ```

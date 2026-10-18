@@ -1,7 +1,0 @@
-set psi_name T4_Cerebro_Energetic_Extension_Quickfire
-set psi_power 31
-set psi_slot 0
-set psi_benefits 0
-run psi\lib\T4.cmd
-run psi\lib\quickfire.cmd
-run psi\lib\draw_cast.cmd

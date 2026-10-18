@@ -1,0 +1,7 @@
+set psi_name T5_Advanced_Cerebro_Stimulated_Regeneration
+set psi_power 33
+set psi_slot 0
+set psi_benefits 1
+run psi\lib\T5.txt
+run psi\lib\overload.txt
+run psi\lib\draw_cast.txt

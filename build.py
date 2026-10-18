@@ -2,10 +2,10 @@
 
     py build.py            build dist/psi_autocast.kpf only
     py build.py --package  also build dist/psi_autocast_v<version>.zip for release
-    py build.py --install  also copy the .kpf and psi/*.cmd into the game (developer use)
+    py build.py --install  also copy the .kpf and the psi key files (.txt) into the game (developer use)
     py build.py --dev ...  include the dev/ tools (overload probe) in the .kpf; never for release
 
-The .kpf can only be replaced while the game is closed. The .cmd files can be
+The .kpf can only be replaced while the game is closed. The key files can be
 copied at any time; the game reads them fresh on every keypress.
 """
 import argparse
@@ -43,7 +43,7 @@ def build_kpf(include_dev=False):
 
 def player_files():
     """Key scripts, parts, chains and the macro builder page."""
-    return sorted(p for p in KEYS_SOURCE.rglob("*") if p.suffix in (".cmd", ".html"))
+    return sorted(p for p in KEYS_SOURCE.rglob("*") if p.suffix in (".txt", ".html"))
 
 
 def package_release():
