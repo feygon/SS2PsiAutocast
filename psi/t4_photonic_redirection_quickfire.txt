@@ -1,0 +1,7 @@
+set psi_name T4_Photonic_Redirection_Quickfire
+set psi_power 25
+set psi_slot 0
+set psi_benefits 0
+run psi\lib\t4.txt
+run psi\lib\quickfire.txt
+run psi\lib\draw_cast.txt

@@ -8,13 +8,13 @@ rem kept. Older versions of this script bound G and J straight to the psi script
 rem Any other binding on G or J is left alone. Backs up user.bnd before changing it. Run it with the game closed.
 setlocal
 
-set "G_RUN=run psi\T1_Projected_Cryokinesis.txt"
-set "J_RUN=run psi\chains\Starter_Localized_Pyrokinesis.txt"
+set "G_RUN=run psi\t1_projected_cryokinesis.txt"
+set "J_RUN=run psi\chains\starter_localized_pyrokinesis.txt"
 set "G_LINE=bind g "run user:/psi_macros\Macro_g.cmd""
 set "J_LINE=bind j "run user:/psi_macros\Macro_j.cmd""
 rem The direct lines, offered when G or J has the player's own binding (they need no file).
-set "G_DIRECT=bind g "run psi\T1_Projected_Cryokinesis.txt""
-set "J_DIRECT=bind j "run psi\chains\Starter_Localized_Pyrokinesis.txt""
+set "G_DIRECT=bind g "run psi\t1_projected_cryokinesis.txt""
+set "J_DIRECT=bind j "run psi\chains\starter_localized_pyrokinesis.txt""
 
 rem Windows tools are called so a Unix "find" on the PATH (Git for Windows puts one there) can't take over:
 rem findstr has no Unix namesake, and find.exe is called by its full path.

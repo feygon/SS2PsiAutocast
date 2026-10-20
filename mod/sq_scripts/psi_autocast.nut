@@ -418,7 +418,7 @@ class PsiChain extends SqRootScript {
 				local drawMs = CfgInt("psi_draw_ms", 800);
 				Say(label + "arm - drawing the psi amp, waiting " + drawMs + "ms");
 				PsiRememberWeapon();
-				Debug.Command("run psi\\actions\\Arm_Psi_Amp.txt");
+				Debug.Command("run psi\\actions\\arm_psi_amp.txt");
 				SetOneShotTimer("ChainNext", drawMs / 1000.0);
 			}
 			return;
@@ -426,7 +426,7 @@ class PsiChain extends SqRootScript {
 
 		if (step == "hypo") {
 			Say(label + "use psi hypo");
-			Debug.Command("run psi\\actions\\Use_Psi_Hypo.txt");
+			Debug.Command("run psi\\actions\\use_psi_hypo.txt");
 			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
@@ -440,7 +440,7 @@ class PsiChain extends SqRootScript {
 		if (step.len() > 7 && step.slice(0, 7) == "weapon:") {
 			local weapon = step.slice(7);
 			Say(label + "switch to " + PsiUnderscoresToSpaces(weapon));
-			Debug.Command("run psi\\actions\\Switch_To_" + weapon + ".txt");
+			Debug.Command("run psi\\actions\\switch_to_" + weapon.tolower() + ".txt");
 			SetOneShotTimer("ChainNext", 0.01);
 			return;
 		}
@@ -462,7 +462,7 @@ class PsiChain extends SqRootScript {
 				+ " (max - " + restore + ", what a hypo restores on this difficulty"
 				+ (ShockGame.HasTrait("Player", eTrait.kTraitPharmo) ? " with Pharmo-Friendly" : "")
 				+ "), using a psi hypo first, then waiting " + waitMs + "ms");
-			Debug.Command("run psi\\actions\\Use_Psi_Hypo.txt");
+			Debug.Command("run psi\\actions\\use_psi_hypo.txt");
 			SetData("AutoHypoFor", index);
 			SetOneShotTimer("ChainRetry", waitMs / 1000.0);
 			return;
@@ -490,7 +490,7 @@ class PsiChain extends SqRootScript {
 		}
 		else {
 			Say(label + step);
-			Debug.Command("run psi\\" + step + ".txt");
+			Debug.Command("run psi\\" + step.tolower() + ".txt");
 		}
 		SetOneShotTimer("ChainPoll", PSI_CHAIN_POLL_S);
 	}
@@ -558,7 +558,9 @@ function PsiWriteText(path, text) {
 	output.close();
 }
 
-// text with "run psi\<file>.cmd" changed to .txt wherever <file> is one psi_autocast ships (any case).
+// text with "run psi\<file>.cmd" (or a .txt with capitals) changed to "run psi\<file, lower case>.txt" wherever
+// <file> is one psi_autocast ships. Lower case because key bindings look up a .txt name with its exact capitals,
+// and the files' names are all lower case.
 function PsiToTxt(text) {
 	local lower = text.tolower();
 	local out = "";
@@ -572,8 +574,10 @@ function PsiToTxt(text) {
 		while (stop < lower.len() && lower[stop] != '"' && lower[stop] != '\r' && lower[stop] != '\n')
 			stop++;
 		local path = lower.slice(name, stop);
-		if (path.len() > 4 && path.slice(-4) == ".cmd" && (path.slice(0, -4) in ND.psiKeyFiles)) {
-			out += text.slice(pos, stop - 4) + ".txt";
+		local ext = path.len() > 4 ? path.slice(-4) : "";
+		local wanted = path.slice(0, path.len() > 4 ? -4 : path.len()) + ".txt";
+		if ((ext == ".cmd" || ext == ".txt") && (path.slice(0, -4) in ND.psiKeyFiles) && text.slice(name, stop) != wanted) {
+			out += text.slice(pos, name) + wanted;
 			pos = stop;
 		}
 		else {
@@ -630,7 +634,7 @@ function PsiMigrateBindings() {
 		changed++;
 	}
 	if (changed) {
-		local message = "psi_autocast 1.4: your psi keys now use the new .txt files from your next start. Keep the old .cmd files until then.";
+		local message = "psi_autocast 1.4: your psi keys use the new .txt files from your next start. Keep the old .cmd files until then.";
 		print("[psi_autocast] " + message);
 		try {
 			ShockGame.AddText(message, "Player", 15000);

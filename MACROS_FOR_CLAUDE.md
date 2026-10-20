@@ -16,7 +16,7 @@
 
 ## How a cast works
 
-1. A key binding in `user.bnd` runs a macro: `bind g "run psi\T1_Projected_Cryokinesis.txt"`.
+1. A key binding in `user.bnd` runs a macro: `bind g "run psi\t1_projected_cryokinesis.txt"`.
 2. The macro `set`s config values, runs shared parts from `psi\lib\`, and ends with `summon_obj PsiCast` followed by `equip_weapon psi amp`.
 3. **`PsiCast`, a Squirrel script in `mods\psi_autocast.kpf`:**
    - reads the values;
@@ -47,7 +47,7 @@ set psi_name T1_Projected_Cryokinesis
 set psi_power 6
 set psi_slot 0
 set psi_benefits 1
-run psi\lib\T1.txt
+run psi\lib\t1.txt
 run psi\lib\overload.txt
 run psi\lib\draw_cast.txt
 ```
@@ -56,7 +56,7 @@ run psi\lib\draw_cast.txt
 
 | Part | Contents |
 |---|---|
-| `psi\lib\T1.txt` … `T5.txt` | `set psi_tier N` |
+| `psi\lib\t1.txt` … `t5.txt` | `set psi_tier N` |
 | `psi\lib\quickfire.txt` | `set psi_mode 0` |
 | `psi\lib\overload.txt` | `set psi_mode 1` |
 | `psi\lib\draw_cast.txt` | `set psi_draw_ms 800`, `summon_obj PsiCast`, `equip_weapon psi amp` |
@@ -78,7 +78,7 @@ summon_obj PsiChain
   - `<id>o`: cast discipline `<id>` with conditional overload. `<id>q`: quickfire it. The ids are in the [table](#discipline-numbers).
   - `w<ms>`: wait that many milliseconds. Put one between steps.
   - `hypo`: use a psi hypo (`use_obj psi booster`). Allowed anywhere.
-  - `last`: switch back to the weapon held when a macro last drew the amp. The mod remembers it and re-equips it with `ShockGame.Equip`. The game's `last_weapon` command goes one weapon too far back, because it doesn't count `equip_weapon` switches. `weapon:<Name>`: switch weapon by running `psi\actions\Switch_To_<Name>.txt`. Valid names: `Wrench`, `Pistol`, `Shotgun`, `Assault_Rifle`, `Laser_Pistol`, `EMP_Rifle`, `Laser_Rapier`, `Grenade_Launcher`, `Stasis_Field_Generator`, `Fusion_Cannon`, `Crystal_Shard`, `Viral_Proliferator`, `Annelid_Launcher` (case matters). **Put a weapon switch only as the last step,** because casts after it would find the amp put away.
+  - `last`: switch back to the weapon held when a macro last drew the amp. The mod remembers it and re-equips it with `ShockGame.Equip`. The game's `last_weapon` command goes one weapon too far back, because it doesn't count `equip_weapon` switches. `weapon:<Name>`: switch weapon by running `psi\actions\switch_to_<name>.txt`. Valid names: `Wrench`, `Pistol`, `Shotgun`, `Assault_Rifle`, `Laser_Pistol`, `EMP_Rifle`, `Laser_Rapier`, `Grenade_Launcher`, `Stasis_Field_Generator`, `Fusion_Cannon`, `Crystal_Shard`, `Viral_Proliferator`, `Annelid_Launcher` (case matters). **Put a weapon switch only as the last step,** because casts after it would find the amp put away.
   - **Two casts must be at least 500 ms apart in total,** counting the waits around any hypo between them.
   - `<name>`: run `psi\<name>.txt`, a discipline script. These draw the amp themselves.
 - **Direct casts (`<id>o` / `<id>q`) never draw the amp.** Without a leading `arm` step, the chain stops with a console message when the amp isn't in hand.
@@ -102,7 +102,7 @@ summon_obj PsiChain
 | `psi_power` | 1–39, see [table](#discipline-numbers) | Discipline to cast; 0 = use `psi_slot` |
 | `psi_slot` | 1–12 | Quick slot to use when `psi_power` is 0. The player fills it in game with Shift+F-key while hovering over the power |
 | `psi_benefits` | 0 or 1 | Whether overloading improves this discipline |
-| `psi_tier` | 1–5 | Set by `psi\lib\T<N>.txt` |
+| `psi_tier` | 1–5 | Set by `psi\lib\t<n>.txt` |
 | `psi_mode` | 0, 1, 2 | 0 quickfire, 1 conditional overload, 2 manual hold |
 | `psi_release_ms` | ms | Hold time for mode 2 |
 | `psi_draw_ms` | ms | Wait for the amp to come up when it isn't already in hand. 800 is reliable from the pistol |
@@ -111,7 +111,7 @@ summon_obj PsiChain
 | `psi_auto_hypo` | 0 or 1 | Before each cast in a chain, use a psi hypo if psi points are at or below max minus what a hypo restores. The mod works this out from `Quest.Get("Difficulty")` (1 = Easy: 30, otherwise 20) and the Pharmo-Friendly trait (× 1.2), giving 36 or 24. Always set it, to 0 or 1, because it carries over between macros |
 | `psi_auto_hypo_wait_ms` | ms | Pause after an auto hypo before the cast (default 500) |
 
-**Cancel:** `psi\actions\Cancel_Macro.txt` (`summon_obj PsiCancel`) stops any running macro at its next timer. It releases fire first, so a cast that is mid-charge casts at normal strength, or fizzles if the charge has only just started. Suggest binding it alongside any chain.
+**Cancel:** `psi\actions\cancel_macro.txt` (`summon_obj PsiCancel`) stops any running macro at its next timer. It releases fire first, so a cast that is mid-charge casts at normal strength, or fizzles if the charge has only just started. Suggest binding it alongside any chain.
 
 ## Overload timing
 
@@ -156,39 +156,39 @@ From the game's `psihelp.str`. "Benefits" follows the System Shock wiki's list o
 <!-- disciplines:start -->
 | `psi_power` | Tier | Discipline | Benefits from overload | Conditional overload script | Quickfire script |
 |---|---|---|---|---|---|
-| 1 | 1 | Psycho-Reflective Screen | No | `T1_Psycho_Reflective_Screen.txt` | `T1_Psycho_Reflective_Screen_Quickfire.txt` |
-| 2 | 1 | Neuro-Reflex Dampening | No | `T1_Neuro_Reflex_Dampening.txt` | `T1_Neuro_Reflex_Dampening_Quickfire.txt` |
-| 3 | 1 | Kinetic Redirection | Yes | `T1_Kinetic_Redirection.txt` | `T1_Kinetic_Redirection_Quickfire.txt` |
-| 4 | 1 | Psychogenic Agility | No | `T1_Psychogenic_Agility.txt` | `T1_Psychogenic_Agility_Quickfire.txt` |
-| 5 | 1 | Psychogenic Cyber-Affinity | No | `T1_Psychogenic_Cyber_Affinity.txt` | `T1_Psychogenic_Cyber_Affinity_Quickfire.txt` |
-| 6 | 1 | Projected Cryokinesis | Yes | `T1_Projected_Cryokinesis.txt` | `T1_Projected_Cryokinesis_Quickfire.txt` |
-| 7 | 1 | Remote Electron Tampering | Yes | `T1_Remote_Electron_Tampering.txt` | `T1_Remote_Electron_Tampering_Quickfire.txt` |
-| 9 | 2 | Anti-Entropic Field | No | `T2_Anti_Entropic_Field.txt` | `T2_Anti_Entropic_Field_Quickfire.txt` |
-| 10 | 2 | Adrenaline Overproduction | No | `T2_Adrenaline_Overproduction.txt` | `T2_Adrenaline_Overproduction_Quickfire.txt` |
-| 11 | 2 | Neural Decontamination | No | `T2_Neural_Decontamination.txt` | `T2_Neural_Decontamination_Quickfire.txt` |
-| 12 | 2 | Cerebro-Stimulated Regeneration | Yes | `T2_Cerebro_Stimulated_Regeneration.txt` | `T2_Cerebro_Stimulated_Regeneration_Quickfire.txt` |
-| 13 | 2 | Psychogenic Strength | No | `T2_Psychogenic_Strength.txt` | `T2_Psychogenic_Strength_Quickfire.txt` |
-| 14 | 2 | Recursive Psionic Amplification | No | `T2_Recursive_Psionic_Amplification.txt` | `T2_Recursive_Psionic_Amplification_Quickfire.txt` |
-| 15 | 2 | Localized Pyrokinesis | No | `T2_Localized_Pyrokinesis.txt` | `T2_Localized_Pyrokinesis_Quickfire.txt` |
-| 17 | 3 | Molecular Duplication | Yes | `T3_Molecular_Duplication.txt` | `T3_Molecular_Duplication_Quickfire.txt` |
-| 18 | 3 | Electron Cascade | Yes | `T3_Electron_Cascade.txt` | `T3_Electron_Cascade_Quickfire.txt` |
-| 19 | 3 | Energy Reflection | No | `T3_Energy_Reflection.txt` | `T3_Energy_Reflection_Quickfire.txt` |
-| 20 | 3 | Neural Toxin-Blocker | No | `T3_Neural_Toxin_Blocker.txt` | `T3_Neural_Toxin_Blocker_Quickfire.txt` |
-| 21 | 3 | Enhanced Motion Sensitivity | No | `T3_Enhanced_Motion_Sensitivity.txt` | `T3_Enhanced_Motion_Sensitivity_Quickfire.txt` |
-| 22 | 3 | Projected Pyrokinesis | Yes | `T3_Projected_Pyrokinesis.txt` | `T3_Projected_Pyrokinesis_Quickfire.txt` |
-| 23 | 3 | Psionic Hypnogenesis | Yes | `T3_Psionic_Hypnogenesis.txt` | `T3_Psionic_Hypnogenesis_Quickfire.txt` |
-| 25 | 4 | Photonic Redirection | No | `T4_Photonic_Redirection.txt` | `T4_Photonic_Redirection_Quickfire.txt` |
-| 26 | 4 | Remote Pattern Detection | No | `T4_Remote_Pattern_Detection.txt` | `T4_Remote_Pattern_Detection_Quickfire.txt` |
-| 27 | 4 | Electron Suppression | Yes | `T4_Electron_Suppression.txt` | `T4_Electron_Suppression_Quickfire.txt` |
-| 28 | 4 | Psychogenic Endurance | No | `T4_Psychogenic_Endurance.txt` | `T4_Psychogenic_Endurance_Quickfire.txt` |
-| 29 | 4 | Molecular Transmutation | Yes | `T4_Molecular_Transmutation.txt` | `T4_Molecular_Transmutation_Quickfire.txt` |
-| 30 | 4 | Remote Circuitry Manipulation | Yes | `T4_Remote_Circuitry_Manipulation.txt` | `T4_Remote_Circuitry_Manipulation_Quickfire.txt` |
-| 31 | 4 | Cerebro-Energetic Extension | No | `T4_Cerebro_Energetic_Extension.txt` | `T4_Cerebro_Energetic_Extension_Quickfire.txt` |
-| 33 | 5 | Advanced Cerebro-Stimulated Regeneration | Yes | `T5_Advanced_Cerebro_Stimulated_Regeneration.txt` | `T5_Advanced_Cerebro_Stimulated_Regeneration_Quickfire.txt` |
-| 34 | 5 | Soma Transference | Yes | `T5_Soma_Transference.txt` | `T5_Soma_Transference_Quickfire.txt` |
-| 35 | 5 | Instantaneous Quantum Relocation | No | `T5_Instantaneous_Quantum_Relocation.txt` | `T5_Instantaneous_Quantum_Relocation_Quickfire.txt` |
-| 36 | 5 | Imposed Neural Restructuring | Yes | `T5_Imposed_Neural_Restructuring.txt` | `T5_Imposed_Neural_Restructuring_Quickfire.txt` |
-| 37 | 5 | Metacreative Barrier | Yes | `T5_Metacreative_Barrier.txt` | `T5_Metacreative_Barrier_Quickfire.txt` |
-| 38 | 5 | External Psionic Detonation | No | `T5_External_Psionic_Detonation.txt` | `T5_External_Psionic_Detonation_Quickfire.txt` |
-| 39 | 5 | Psycho-Reflective Aura | No | `T5_Psycho_Reflective_Aura.txt` | `T5_Psycho_Reflective_Aura_Quickfire.txt` |
+| 1 | 1 | Psycho-Reflective Screen | No | `t1_psycho_reflective_screen.txt` | `t1_psycho_reflective_screen_quickfire.txt` |
+| 2 | 1 | Neuro-Reflex Dampening | No | `t1_neuro_reflex_dampening.txt` | `t1_neuro_reflex_dampening_quickfire.txt` |
+| 3 | 1 | Kinetic Redirection | Yes | `t1_kinetic_redirection.txt` | `t1_kinetic_redirection_quickfire.txt` |
+| 4 | 1 | Psychogenic Agility | No | `t1_psychogenic_agility.txt` | `t1_psychogenic_agility_quickfire.txt` |
+| 5 | 1 | Psychogenic Cyber-Affinity | No | `t1_psychogenic_cyber_affinity.txt` | `t1_psychogenic_cyber_affinity_quickfire.txt` |
+| 6 | 1 | Projected Cryokinesis | Yes | `t1_projected_cryokinesis.txt` | `t1_projected_cryokinesis_quickfire.txt` |
+| 7 | 1 | Remote Electron Tampering | Yes | `t1_remote_electron_tampering.txt` | `t1_remote_electron_tampering_quickfire.txt` |
+| 9 | 2 | Anti-Entropic Field | No | `t2_anti_entropic_field.txt` | `t2_anti_entropic_field_quickfire.txt` |
+| 10 | 2 | Adrenaline Overproduction | No | `t2_adrenaline_overproduction.txt` | `t2_adrenaline_overproduction_quickfire.txt` |
+| 11 | 2 | Neural Decontamination | No | `t2_neural_decontamination.txt` | `t2_neural_decontamination_quickfire.txt` |
+| 12 | 2 | Cerebro-Stimulated Regeneration | Yes | `t2_cerebro_stimulated_regeneration.txt` | `t2_cerebro_stimulated_regeneration_quickfire.txt` |
+| 13 | 2 | Psychogenic Strength | No | `t2_psychogenic_strength.txt` | `t2_psychogenic_strength_quickfire.txt` |
+| 14 | 2 | Recursive Psionic Amplification | No | `t2_recursive_psionic_amplification.txt` | `t2_recursive_psionic_amplification_quickfire.txt` |
+| 15 | 2 | Localized Pyrokinesis | No | `t2_localized_pyrokinesis.txt` | `t2_localized_pyrokinesis_quickfire.txt` |
+| 17 | 3 | Molecular Duplication | Yes | `t3_molecular_duplication.txt` | `t3_molecular_duplication_quickfire.txt` |
+| 18 | 3 | Electron Cascade | Yes | `t3_electron_cascade.txt` | `t3_electron_cascade_quickfire.txt` |
+| 19 | 3 | Energy Reflection | No | `t3_energy_reflection.txt` | `t3_energy_reflection_quickfire.txt` |
+| 20 | 3 | Neural Toxin-Blocker | No | `t3_neural_toxin_blocker.txt` | `t3_neural_toxin_blocker_quickfire.txt` |
+| 21 | 3 | Enhanced Motion Sensitivity | No | `t3_enhanced_motion_sensitivity.txt` | `t3_enhanced_motion_sensitivity_quickfire.txt` |
+| 22 | 3 | Projected Pyrokinesis | Yes | `t3_projected_pyrokinesis.txt` | `t3_projected_pyrokinesis_quickfire.txt` |
+| 23 | 3 | Psionic Hypnogenesis | Yes | `t3_psionic_hypnogenesis.txt` | `t3_psionic_hypnogenesis_quickfire.txt` |
+| 25 | 4 | Photonic Redirection | No | `t4_photonic_redirection.txt` | `t4_photonic_redirection_quickfire.txt` |
+| 26 | 4 | Remote Pattern Detection | No | `t4_remote_pattern_detection.txt` | `t4_remote_pattern_detection_quickfire.txt` |
+| 27 | 4 | Electron Suppression | Yes | `t4_electron_suppression.txt` | `t4_electron_suppression_quickfire.txt` |
+| 28 | 4 | Psychogenic Endurance | No | `t4_psychogenic_endurance.txt` | `t4_psychogenic_endurance_quickfire.txt` |
+| 29 | 4 | Molecular Transmutation | Yes | `t4_molecular_transmutation.txt` | `t4_molecular_transmutation_quickfire.txt` |
+| 30 | 4 | Remote Circuitry Manipulation | Yes | `t4_remote_circuitry_manipulation.txt` | `t4_remote_circuitry_manipulation_quickfire.txt` |
+| 31 | 4 | Cerebro-Energetic Extension | No | `t4_cerebro_energetic_extension.txt` | `t4_cerebro_energetic_extension_quickfire.txt` |
+| 33 | 5 | Advanced Cerebro-Stimulated Regeneration | Yes | `t5_advanced_cerebro_stimulated_regeneration.txt` | `t5_advanced_cerebro_stimulated_regeneration_quickfire.txt` |
+| 34 | 5 | Soma Transference | Yes | `t5_soma_transference.txt` | `t5_soma_transference_quickfire.txt` |
+| 35 | 5 | Instantaneous Quantum Relocation | No | `t5_instantaneous_quantum_relocation.txt` | `t5_instantaneous_quantum_relocation_quickfire.txt` |
+| 36 | 5 | Imposed Neural Restructuring | Yes | `t5_imposed_neural_restructuring.txt` | `t5_imposed_neural_restructuring_quickfire.txt` |
+| 37 | 5 | Metacreative Barrier | Yes | `t5_metacreative_barrier.txt` | `t5_metacreative_barrier_quickfire.txt` |
+| 38 | 5 | External Psionic Detonation | No | `t5_external_psionic_detonation.txt` | `t5_external_psionic_detonation_quickfire.txt` |
+| 39 | 5 | Psycho-Reflective Aura | No | `t5_psycho_reflective_aura.txt` | `t5_psycho_reflective_aura_quickfire.txt` |
 <!-- disciplines:end -->

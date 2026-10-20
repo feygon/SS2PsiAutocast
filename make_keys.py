@@ -105,6 +105,8 @@ DRAW_MS = 800
 # Key files are .txt: the game's run command ignores the extension (verified in game 2026-10-18), Nexus
 # quarantined zips full of .cmd files, and double-clicking a .cmd runs it in Windows. Earlier versions used .cmd.
 EXT = ".txt"
+# File names are all lower case: key bindings look up a .txt name with its exact capitals, and the game writes
+# user.bnd in lower case (in game 2026-10-20). The names inside the files (psi_name) keep their capitals.
 
 # The parts. Each is a key file in psi\lib\ that sets one aspect of a cast.
 LIB_PARTS = {
@@ -132,7 +134,7 @@ def key_file_lines(power, name, benefits, mode_part, inline):
         f"set psi_benefits {1 if benefits else 0}",
     ]
     for part in (f"T{tier_of(power)}", mode_part, "draw_cast"):
-        lines += LIB_PARTS[part] if inline else [f"run psi\\lib\\{part}{EXT}"]
+        lines += LIB_PARTS[part] if inline else [f"run psi\\lib\\{part.lower()}{EXT}"]
     return stem, lines
 
 
@@ -146,7 +148,7 @@ def discipline_table(with_ids):
     rows = [("| `psi_power` " if with_ids else "") + head, ("|---" if with_ids else "") + rule]
     for power, name, benefits in DISCIPLINES:
         stem = file_stem(power, name)
-        row = f"| {tier_of(power)} | {name} | {'Yes' if benefits else 'No'} | `{stem}{EXT}` | `{stem}_Quickfire{EXT}` |"
+        row = f"| {tier_of(power)} | {name} | {'Yes' if benefits else 'No'} | `{stem.lower()}{EXT}` | `{stem.lower()}_quickfire{EXT}` |"
         rows.append((f"| {power} " if with_ids else "") + row)
     return "\n".join(rows)
 
@@ -191,13 +193,13 @@ def write_actions():
         old.unlink()
     # The chain runs these files rather than sending the commands itself: Debug.Command goes through
     # the console, which splits arguments at spaces ("equip_weapon psi amp" becomes "equip_weapon psi").
-    write(ACTIONS_DIR / f"Arm_Psi_Amp{EXT}", ["equip_weapon psi amp"])
-    write(ACTIONS_DIR / f"Use_Psi_Hypo{EXT}", ["use_obj psi booster"])
-    write(ACTIONS_DIR / f"Cancel_Macro{EXT}", ["summon_obj PsiCancel"])
+    write(ACTIONS_DIR / f"arm_psi_amp{EXT}", ["equip_weapon psi amp"])
+    write(ACTIONS_DIR / f"use_psi_hypo{EXT}", ["use_obj psi booster"])
+    write(ACTIONS_DIR / f"cancel_macro{EXT}", ["summon_obj PsiCancel"])
     # Not last_weapon: that skipped back past the weapon held before the macro drew the amp.
-    write(ACTIONS_DIR / f"Switch_To_Previous_Weapon{EXT}", ["summon_obj PsiPreviousWeapon"])
+    write(ACTIONS_DIR / f"switch_to_previous_weapon{EXT}", ["summon_obj PsiPreviousWeapon"])
     for display, name in WEAPONS:
-        write(ACTIONS_DIR / f"Switch_To_{display.replace(' ', '_')}{EXT}", [f"equip_weapon {name}"])
+        write(ACTIONS_DIR / f"switch_to_{display.replace(' ', '_').lower()}{EXT}", [f"equip_weapon {name}"])
 
     # Used by "previous weapon": psi\actions\equip\<equip name, underscores>.txt
     equip_dir = ACTIONS_DIR / "equip"
@@ -205,14 +207,14 @@ def write_actions():
     for old in [*equip_dir.glob("*.cmd"), *equip_dir.glob(f"*{EXT}")]:
         old.unlink()
     for _, name in WEAPONS:
-        write(equip_dir / f"{name.replace(' ', '_')}{EXT}", [f"equip_weapon {name}"])
+        write(equip_dir / f"{name.replace(' ', '_').lower()}{EXT}", [f"equip_weapon {name}"])
 
 
 def write_builder():
     """Macro_Builder.html with the discipline list embedded, so it works offline."""
     disciplines = []
     for power, name, benefits in DISCIPLINES:
-        entry = {"id": power, "tier": tier_of(power), "name": name, "file": file_stem(power, name), "benefits": benefits}
+        entry = {"id": power, "tier": tier_of(power), "name": name, "file": file_stem(power, name).lower(), "benefits": benefits}
         if power in DURATIONS:
             base, per_psi, source = DURATIONS[power]
             entry["duration"] = {"base": base, "perPsi": per_psi, "source": source}
@@ -246,17 +248,18 @@ def main():
     args = parser.parse_args()
 
     LIB_DIR.mkdir(parents=True, exist_ok=True)
-    for part, lines in LIB_PARTS.items():
-        write(LIB_DIR / f"{part}{EXT}", lines)
-    for old in LIB_DIR.glob("*.cmd"):
+    # Delete first: on Windows, writing over T1.txt as t1.txt keeps the old capitals.
+    for old in [*LIB_DIR.glob("*.cmd"), *LIB_DIR.glob(f"*{EXT}")]:
         old.unlink()
+    for part, lines in LIB_PARTS.items():
+        write(LIB_DIR / f"{part.lower()}{EXT}", lines)
 
     for old in [*KEYS_DIR.glob("*.cmd"), *KEYS_DIR.glob(f"*{EXT}")]:
         old.unlink()
     for power, name, benefits in DISCIPLINES:
         for mode_part in ("overload", "quickfire"):
             stem, lines = key_file_lines(power, name, benefits, mode_part, args.inline)
-            write(KEYS_DIR / f"{stem}{EXT}", lines)
+            write(KEYS_DIR / f"{stem.lower()}{EXT}", lines)
 
     update_table(README, with_ids=False)
     update_table(CLAUDE_GUIDE, with_ids=True)

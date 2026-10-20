@@ -90,8 +90,8 @@ def test_two_scripts_per_discipline():
     names = re.findall(r'ND\.psiDisciplines\[(\d+)\] <- \{ name = "([^"]+)"', data)
     assert len(names) == 35
     for _, name in names:
-        assert (PSI / f"{name}.txt").exists(), name
-        assert (PSI / f"{name}_Quickfire.txt").exists(), name
+        assert (PSI / f"{name.lower()}.txt").exists(), name
+        assert (PSI / f"{name.lower()}_quickfire.txt").exists(), name
 
 
 def test_overload_flags_match_the_wiki():
@@ -180,8 +180,8 @@ def test_bat_binds_free_keys(tmp_path):
     # Bound through files in the save folder (the names psi_autocast_mfd uses), so the MFD can edit them later.
     assert 'bind g "run user:/psi_macros\\Macro_g.cmd"' in bindings(tmp_path)
     assert 'bind j "run user:/psi_macros\\Macro_j.cmd"' in bindings(tmp_path)
-    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.txt"]
-    assert macro(tmp_path, "j") == ["run psi\\chains\\Starter_Localized_Pyrokinesis.txt"]
+    assert macro(tmp_path, "g") == ["run psi\\t1_projected_cryokinesis.txt"]
+    assert macro(tmp_path, "j") == ["run psi\\chains\\starter_localized_pyrokinesis.txt"]
     assert (tmp_path / "user.bnd.before_starter_1").exists()
 
 
@@ -230,7 +230,7 @@ def test_bat_upgrades_its_old_direct_bindings(tmp_path):
     assert [l for l in b if l.startswith("bind g ")] == ['bind g "run user:/psi_macros\\Macro_g.cmd"']
     assert [l for l in b if l.startswith("bind j ")] == ['bind j "run user:/psi_macros\\Macro_j.cmd"']
     assert 'bind k "keep"' in b
-    assert macro(tmp_path, "g") == ["run psi\\T1_Projected_Cryokinesis.txt"]
+    assert macro(tmp_path, "g") == ["run psi\\t1_projected_cryokinesis.txt"]
 
 
 # ---- overload window -----------------------------------------------------------------------------------
@@ -303,10 +303,14 @@ def shipped_key_files():
 
 
 def to_txt(text, ours):
-    """The twin of PsiToTxt: 'run psi\\<file>.cmd' becomes .txt only when <file> is one psi_autocast ships."""
+    """The twin of PsiToTxt: 'run psi\\<file>.cmd' (or a .txt with capitals) becomes 'run psi\\<file, lower case>.txt',
+    only when <file> is one psi_autocast ships."""
     def repl(m):
-        return m.group(1) + (".txt" if m.group(2).lower() in ours else m.group(3))
-    return re.sub(r"(run psi\\([^\r\n\"]*?))(\.cmd)", repl, text, flags=re.I)
+        path = m.group(2)
+        if path.lower() not in ours:
+            return m.group(0)
+        return m.group(1) + path.lower() + ".txt"
+    return re.sub(r"(run psi\\)([^\r\n\"]*?)\.(cmd|txt)", repl, text, flags=re.I)
 
 
 def test_key_file_list_matches_the_psi_folder():
@@ -332,8 +336,9 @@ def test_only_our_bindings_move_to_txt():
               'bind t wpn_setting_toggle\r\n')
     after = to_txt(before, ours)
     assert 'bind g "run psi\\t1_projected_cryokinesis_quickfire.txt"' in after
-    assert 'bind keypad_plus "run psi\\actions\\Cancel_Macro.txt"' in after
-    assert 'bind j "run psi\\chains\\Starter_Localized_Pyrokinesis.txt"' in after
+    assert 'bind keypad_plus "run psi\\actions\\cancel_macro.txt"' in after
+    assert 'bind j "run psi\\chains\\starter_localized_pyrokinesis.txt"' in after
+    assert to_txt('bind x "run psi\\actions\\Use_Psi_Hypo.txt"', ours) == 'bind x "run psi\\actions\\use_psi_hypo.txt"'
     for line in ['bind k "run psi\\chains\\My_Own_Chain.cmd"', 'bind l "run othermod\\thing.cmd"',
                  'bind o "run user:/psi_macros\\Macro_o.cmd"', 'bind t wpn_setting_toggle']:
         assert line in after, line
@@ -342,3 +347,26 @@ def test_only_our_bindings_move_to_txt():
     for name in ["PsiToTxt", "PsiMigrateBindings"]:
         assert f"function {name}(" in code, name
     assert "ND.psiKeyFiles" in code and "OnFrameUpdate" in code and 'Say("couldn\'t update' in code
+
+
+
+def test_every_shipped_name_and_run_path_is_lower_case():
+    """
+    WHY: Key bindings look up a .txt name with its exact capitals (in game 2026-10-20: a binding to
+    cancel_macro.txt didn't run Cancel_Macro.txt, while Cancel_Macro.txt and an all-lower-case pair did), and the
+    game writes user.bnd in lower case. So every file psi_autocast ships, and every path it runs, is lower case.
+    """
+    names = [p.relative_to(PSI).as_posix() for p in PSI.rglob("*") if p.is_file() and p.suffix == ".txt"]
+    assert names and [n for n in names if n != n.lower()] == []
+    for path in key_files():
+        for line in path.read_text().splitlines():
+            if line.lower().startswith("run "):
+                assert line == line.lower(), f"{path.name}: {line}"
+    code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")
+    for run in re.findall(r'Debug\.Command\("run psi[^)]*\)', code):
+        literal = "".join(re.findall(r'"([^"]*)"', run))
+        assert literal == literal.lower(), run
+    assert 'step.tolower() + ".txt"' in code and 'weapon.tolower() + ".txt"' in code
+    bat = (REPO / "extras/starterPsiPowers.bat").read_text(encoding="latin-1")
+    for line in re.findall(r"run psi\\[^\"\r\n]*", bat):
+        assert line == line.lower(), line

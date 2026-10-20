@@ -1,0 +1,7 @@
+set psi_name T3_Electron_Cascade_Quickfire
+set psi_power 18
+set psi_slot 0
+set psi_benefits 1
+run psi\lib\t3.txt
+run psi\lib\quickfire.txt
+run psi\lib\draw_cast.txt

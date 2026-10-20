@@ -1,0 +1,7 @@
+set psi_name T5_Imposed_Neural_Restructuring
+set psi_power 36
+set psi_slot 0
+set psi_benefits 1
+run psi\lib\t5.txt
+run psi\lib\overload.txt
+run psi\lib\draw_cast.txt
