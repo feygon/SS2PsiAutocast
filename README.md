@@ -48,7 +48,7 @@
    - The game stores a mod list in each save. Loading an older save directly won't enable the mod.
    - **Don't use the `mod_apply` console command mid-game.** It can unload the level and crash the game.
    - To check: in the console, type `mod_list`. psi_autocast should be listed under "Mods to load."
-3. **Upgrading from 1.3 or earlier:** extract over the old version. The key files are now `.txt` instead of `.cmd`. On the first load, psi_autocast moves your key bindings to the new files (backing up `user.bnd` as `user.bnd.psi_backup`) and asks you to restart the game once. Only psi_autocast's own files are renamed: chains you saved yourself keep their names. The old `.cmd` files in the `psi` folder are no longer used, and you can delete them.
+3. **Upgrading from 1.3 or earlier:** extract over the old version. The key files are now `.txt` instead of `.cmd`. On the first load, psi_autocast moves your key bindings to the new files (backing up `user.bnd` as `user.bnd.psi_backup`); your keys keep working on the old files until you next start the game, then use the new ones. No restart needed. Only psi_autocast's own files are renamed: chains you saved yourself keep their names. After that next start, the old `.cmd` files in the `psi` folder are no longer used, and you can delete them.
 
 ## Bind a key
 

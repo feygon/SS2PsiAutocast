@@ -538,8 +538,8 @@ ND.Archetype("PsiPreviousWeapon", "ND", function(){ AddScript("PsiPreviousWeapon
 // player's bindings made for 1.3 or earlier still say "run psi\X.cmd"; on the first load each session they are
 // moved to .txt - only for files psi_autocast ships (ND.psiKeyFiles), so the player's own chains and other mods'
 // files keep their names. The same goes for psi\ lines in the save-folder macro files those bindings run (the
-// starter keys' Macro_g.cmd). user.bnd is backed up first; the game reads it only at startup, so it asks for one
-// restart. Files are read and written through user:/\sq_cache\, the save folder (see psi_autocast_mfd).
+// starter keys' Macro_g.cmd). user.bnd is backed up first. The game reads it only at startup, so the keys keep
+// running the old .cmd files (still in the psi folder after extracting over 1.3) until the next start: no restart. Files are read and written through user:/\sq_cache\, the save folder (see psi_autocast_mfd).
 const PSI_SAVE_ROOT = "user:/\\sq_cache\\";
 
 function PsiReadText(path) {
@@ -630,7 +630,7 @@ function PsiMigrateBindings() {
 		changed++;
 	}
 	if (changed) {
-		local message = "psi_autocast 1.4: your psi key bindings now use the .txt key files. Restart the game once.";
+		local message = "psi_autocast 1.4: your psi keys now use the new .txt files from your next start. Keep the old .cmd files until then.";
 		print("[psi_autocast] " + message);
 		try {
 			ShockGame.AddText(message, "Player", 15000);
