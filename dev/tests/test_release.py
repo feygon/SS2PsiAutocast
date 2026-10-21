@@ -181,6 +181,18 @@ def test_every_way_a_cast_or_chain_ends_calls_the_end_hook():
                 previous = line
 
 
+def test_a_cast_records_its_discipline_before_the_end_hook():
+    """
+    WHY: The game has no way to read the selected psi power back (only SetSelectedPsiPower), so a hook learns
+    what was cast from ND.psiLastReleasedPower. The MFD's dev build keeps the worm skin on until the click that
+    Molecular Transmutation and the other item-targeting disciplines need.
+    """
+    release = macro_class("PsiCast").split('name == "PsiRelease"')[1]
+    record = release.find('ND.psiLastReleasedPower = GetData("Power");')
+    hook = release.find('PsiMacroHook("PsiMacroEnded", self);')
+    assert record != -1 and hook != -1 and record < hook
+
+
 def test_a_missing_or_failing_hook_never_stops_a_macro():
     """WHY: Without the MFD's dev build no hook exists, and a hook's error must not break casting."""
     code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")

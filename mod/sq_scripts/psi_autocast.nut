@@ -250,6 +250,7 @@ class PsiCast extends SqRootScript {
 		else if (name == "PsiRelease") {
 			Debug.Command("fire_weapon 0");
 			Say("released");
+			ND.psiLastReleasedPower = GetData("Power");
 			ND.psiCastsReleased++;
 			PsiMacroHook("PsiMacroEnded", self);
 			Object.Destroy(self);
@@ -259,6 +260,9 @@ class PsiCast extends SqRootScript {
 
 // Counts finished casts, so a chain can tell when its current step has released.
 ND.psiCastsReleased <- 0;
+// The discipline number of the last cast released (0 for a quick slot), for the macro hooks: the game can set
+// the selected psi power but not read it back.
+ND.psiLastReleasedPower <- 0;
 
 // Settings a chain hands to the PsiCast it creates: { power, mode, benefits, name }.
 // Passed directly rather than through console "set" commands, which a script's Debug.Command

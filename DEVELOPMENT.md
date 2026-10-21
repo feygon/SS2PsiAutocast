@@ -56,6 +56,7 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 - **Nesting:** a chain's own casts call both hooks too.
 - **Safety:** `PsiMacroHook` does nothing when a hook isn't defined, and prints a hook's error without stopping the macro.
 - **Timing:** `fire_weapon 0` is only queued when `PsiMacroEnded` runs, so a hook shouldn't undo anything the cast needs until a moment later.
+- **What was cast:** `ND.psiLastReleasedPower` is the discipline number of the last cast released (0 for a quick slot), set before the end hook runs; `ND.psiCastsReleased` counts releases. The game can set the selected psi power but not read it back.
 - **Who uses them:** psi_autocast_mfd's dev armor tool, to wear the worm skin while macros run.
 
 ## Generating key files
