@@ -7,25 +7,44 @@ Press one key: your character draws the psi amp, selects the discipline and cast
 [list=1]
 [*]Extract the zip into the folder with [b]SystemShock2Remastered.exe[/b].[/*]
 [*]New Game → Mods → add [b]psi_autocast[/b] → Apply → start, then load your save and make a regular save.[/*]
-[*]Build a macro in the [url=https://feygon.github.io/SS2PsiAutocast/Macro_Builder.html]Macro Builder[/url], or bind a ready-made script to a key.[/*]
+[*]Build a macro in the [url=https://feygon.github.io/SS2PsiAutocast/Macro_Builder.html]Macro Builder[/url], or bind a ready-made script to a key
+[list]
+[*] (in %USERPROFILE%\Saved Games\Nightdive Studios\System Shock 2 Remastered\user.bnd).[/*]
+[/list]
+[/*]
+[/list]
+or...
+[list=1]
+[*]As above.[/*]
+[*]As above.[/*]
+[*]Download [url=https://github.com/feygon/SS2PsiAutocast/blob/main/extras/starterPsiPowers.bat]starterPsiPowers.bat[/url] from GitHub and run it with the game closed, to set a few testable defaults. It works from any folder, backs up user.bnd first, and leaves G or J alone if you've already bound them:
+[list]
+[*]key 'g' arms the Psi Amp and activates Projected Cryokinesis with overload.[/*]
+[*]key 'j' arms the Psi Amp and activates Localized Pyrokinesis, then switches back to your previous weapon.[/*]
+[/list]
+[/*]
 [/list]
 
 [line]
 [size=4][b]Features[/b][/size]
 [list]
-[*][b]Works from any weapon.[/b] The key draws the amp, waits for it to come up, then casts.[/*]
-[*][b]All 35 disciplines,[/b] each with a [b]quickfire[/b] script and a [b]conditional overload[/b] script.[/*]
-[*][b]Conditional overload[/b] only overloads disciplines that benefit from it. (Many disciplines don't benefit from overloading.)[/*]
-[*][b]Overload timing from the game's own data, adaptive to Psi Tier and Stats.[/b] Worked out on every cast from the tier and your current PSI.[/*]
-[*][b]Chains:[/b] one key casts several disciplines in a row.[/*]
-[*][b]Cancel key:[/b] stops a running macro.[/*]
-[*][b]Psi hypos and weapon switching[/b] inside a macro.[/*]
-[*][b]Console feedback:[/b] every cast reports its tier, PSI, overload zone and decision.[/*]
+[*][b]Works from any weapon.[/b] The key draws the amp, waits for it to come up, then casts. With the amp already out, it casts immediately.[/*]
+[*][b]Scripts for all 35 disciplines[/b], two per discipline:
+[list]
+[*][b]Quickfire[/b] ([i]t1_projected_cryokinesis_quickfire[/i]): casts immediately.[/*]
+[*][b]Conditional overload[/b] ([i]t1_projected_cryokinesis[/i]): overloads when the discipline benefits from it, otherwise casts immediately and says why in the command console. (Many disciplines don't benefit from overloading)[/*]
 [/list]
-
+[/*]
+[*][b]Overload timing from the game's own data, adaptive to Psi Tier and Stats.[/b] The release time is worked out on every cast from the discipline's tier and your current PSI, using the game's Overload Params table. It adapts as your PSI rises.[/*]
+[*][b]Chains:[/b] one key can cast several disciplines in a row, each following its own quickfire or overload rule.[/*]
+[*][b]Console feedback:[/b] every cast reports its tier, your pre-overload PSI, the overload zone and its decision.[/*]
+[*][b]Auto-psi hypo:[/b] optionally, the game will use a hypo if you have less psi points than it will completely fill on use, to ensure the chain of powers doesn't run out of psi points.[/*]
+[*][b]Weapon Switching:[/b]: Return to your last used weapon or switch to another weapon at the end of a chain. Gear up for an invisible fiery beefy adrenaline-pumped Laser Rapier charge with a single button![/*]
+[*][b]Cancel Key:[/b] stops running a macro mid-chain.[/*]
+[/list]
 [line]
 [size=4][b]Macro Builder[/b][/size]
-Open [b]psi\Macro_Builder.html[/b] from the download (it works offline), or use the [url=https://feygon.github.io/SS2PsiAutocast/Macro_Builder.html]online copy[/url].
+Open [b]psi\Macro_Builder.html[/b] from the download (it works offline), or use the [url=https://feygon.github.io/SS2PsiAutocast/Macro_Builder.html]online copy[/url] (see images).
 [list]
 [*][b]Settings first:[/b] auto psi hypo, and how long to wait for the amp to come up.[/*]
 [*][b]Steps:[/b] add casts in order, each quickfire or conditional overload. A psi hypo can go anywhere.[/*]
@@ -33,63 +52,90 @@ Open [b]psi\Macro_Builder.html[/b] from the download (it works offline), or use 
 [*][b]Output:[/b] the macro file (download or copy), the key binding line for user.bnd, and install steps.[/*]
 [/list]
 
-[b]Auto psi hypo:[/b] before each cast, the macro uses a psi hypo if your psi points are at or below your maximum minus what a hypo restores, so none is wasted. It reads your difficulty (30 on Easy, 20 otherwise) and the Pharmo-Friendly upgrade (+20%) itself.
+[b]Auto psi hypo option:[/b] (checked) before each cast, the macro uses a psi hypo if your psi points are at or below your maximum minus what a hypo restores, so none is wasted, but you keep able to cast as well. It reads your difficulty (30 on Easy, 20 otherwise) and the Pharmo-Friendly upgrade (+20%) itself. Keep plentiful psi hypos!
 
 [line]
 [size=4][b]Action scripts[/b][/size]
 One-line scripts in [i]psi\actions[/i] that you can bind to a key on their own:
 [list]
-[*][b]Cancel_Macro[/b]: stops any running macro. A cast that is mid-charge is released.[/*]
-[*][b]Use_Psi_Hypo[/b]: uses a psi hypo.[/*]
-[*][b]Switch_To_Previous_Weapon[/b]: switches back to the weapon you held when your last macro drew the amp.[/*]
-[*][b]Switch_To_<Weapon>[/b]: switches to any weapon by name.[/*]
+[*]arm_psi_amp: Start by arming your psi amp. Included in all base power scripts.[/*]
+[*][b]cancel_macro[/b]: stops any running macro. A cast that is mid-charge is released.[/*]
+[*][b]use_psi_hypo[/b]: uses a psi hypo.[/*]
+[*][b]switch_to_previous_weapon[/b]: switches back to the weapon you held when your last macro drew the amp.[/*]
+[*][b]switch_to_<weapon>[/b]: switches to any weapon by name.[/*]
 [/list]
 
 [line]
 [size=4][b]Binding a key[/b][/size]
 Close the game, open [i]%USERPROFILE%\Saved Games\Nightdive Studios\System Shock 2 Remastered\user.bnd[/i] in Notepad, and add one line per key:
-[code]bind g "run psi\T1_Projected_Cryokinesis_Quickfire.cmd"
-bind j "run psi\T1_Projected_Cryokinesis.cmd"
-bind keypad_plus "run psi\actions\Cancel_Macro.cmd"[/code]
-The game rewrites user.bnd when it exits, so edits made while it's running are lost.
+[code]bind g "run psi\t1_projected_cryokinesis_quickfire.txt"
+bind j "run psi\t1_projected_cryokinesis.txt"
+bind keypad_plus "run psi\actions\cancel_macro.txt"
+bind v "run psi\chains\chain_example.txt"[/code]
+Type file names in lower case, exactly as they are in the [i]psi[/i] folder: a key binding only finds a .txt file whose name matches with the same capitals.
+Statefulness Note: The game rewrites user.bnd when it exits, so edits made while it's running are lost. Also, ALWAYS keep a backup of your previous version of user.bnd in case your changes cause a level to unpop. The provided scripts have been tested and do not cause game errors, to the best of our ability to test.
 
-[spoiler][size=4][b]Install notes[/b][/size]
+[line]
+[size=4][b]Install notes[/b][/size]
 [list]
 [*]The zip creates [i]mods\psi_autocast.kpf[/i] and a [i]psi[/i] folder of scripts.[/*]
-[*]Each save stores its own mod list, so loading an older save directly won't enable the mod. Load it from inside a new game, then save.[/*]
-[*][b]Don't use mod_apply mid-game:[/b] it can unload the level.[/*]
-[/list][/spoiler]
+[*]Each save stores its own mod list, so loading an older save directly won't enable the mod. To add a new mod to a game in progress:
+[list=1]
+[*]Start a new game.[/*]
+[*]Add and Apply the new mod in the mods menu.[/*]
+[*]Start the campaign. Then immediately load your save.[/*]
+[*]Open console with shift ; and type mod_list. If psi_autocast is listed, save your game. Your save now includes the mod.[/*]
+[/list]
+[/*]
+[*][b]Don't use mod_apply manually from the console mid-game:[/b] it can unload the level![/*]
+[/list]
 
-[spoiler][size=4][b]Write your own macros[/b][/size]
+
+[line]
+[size=4][b]Write your own macros[/b][/size]
 Every script is a small text file built from shared parts in [i]psi\lib[/i], so you can make your own in Notepad:
 [code]set psi_name T1_Projected_Cryokinesis
 set psi_power 6
 set psi_slot 0
 set psi_benefits 1
-run psi\lib\T1.cmd
-run psi\lib\overload.cmd
-run psi\lib\draw_cast.cmd[/code]
+run psi\lib\t1.txt
+run psi\lib\overload.txt
+run psi\lib\draw_cast.txt[/code]
 [list]
-[*][b]T1.cmd to T5.cmd[/b] set the discipline's tier.[/*]
-[*][b]quickfire.cmd[/b] or [b]overload.cmd[/b] chooses how it casts.[/*]
-[*][b]draw_cast.cmd[/b] draws the amp if needed, then casts.[/*]
+[*][b]t1.txt to t5.txt[/b] set the discipline's tier.[/*]
+[*][b]quickfire.txt[/b] or [b]overload.txt[/b] chooses how it casts (note: some psi powers aren't affected by overload, and these have been optimized to quickfire even on overload.txt. See System Shock 2 wiki for more details).[/*]
+[*][b]draw_cast.txt[/b] draws the amp if needed, then casts.[/*]
 [/list]
-Chains use the format the Macro Builder writes. [i]arm[/i] draws the amp, [i]6o[/i] is discipline 6 with conditional overload, [i]15q[/i] is discipline 15 quickfired, [i]w500[/i] waits 500 ms, [i]hypo[/i] uses a psi hypo, and [i]last[/i] switches back to your previous weapon:
+[size=3][b]Chains[/b][/size] use the format the Macro Builder writes, passing comma-separated arguments to the psi_chain command. [i]The example below[/i] draws the amp, [i]6o[/i] is discipline 6 with conditional overload, [i]15q[/i] is discipline 15 quickfired, [i]w500[/i] waits 500 ms between casting, [i]hypo[/i] uses a psi hypo, and [i]last[/i] switches back to your previous weapon:
 [code]set psi_chain arm,6o,w500,hypo,w500,15q,w500,last
 set psi_draw_ms 800
 set psi_chain_gap_ms 500
 set psi_auto_hypo 0
 summon_obj PsiChain[/code]
-Scripts are read fresh on every keypress, so you can edit them while the game is running. The readme lists every setting and every discipline number.[/spoiler]
+Scripts are read fresh on every keypress, so you can edit .txt files while the game is running. The readme lists every setting and every discipline number.
 
-[b]You can also have Claude write macros for you.[/b] Give Claude [i]psi\psi_autocast_MACROS_FOR_CLAUDE.md[/i] from the download and describe the macro you want.
+[b]You can also have Claude write macros for you.[/b] Give Claude [i]psi\psi_autocast_MACROS_FOR_CLAUDE.md[/i] from the download and describe the macro you want. The .md file contains all the instructions and architectural knowledge necessary for Claude to assemble your scripts and help you test them.
 
 [line]
 [size=4][b]Requirements[/b][/size]
 [list]
-[*]System Shock 2: 25th Anniversary Remaster on PC. Tested on the Epic version, game version 1.3.4984.[/*]
+[*]System Shock 2: 25th Anniversary Remaster on PC. Tested on the Epic Launcher version, game version 1.3.4984.[/*]
 [*]Won't work on the classic 1999 version.[/*]
 [*]Tested alongside the remaster's bundled mods (SCP beta 6, SHTUP, Four Hundred, patch_ext). Multiplayer is untested.[/*]
+[/list]
+[b]Changelog:[/b]
+V1.3
+[list]
+[*]Fixed auto-overload times at higher tiers. The overload window follows your base PSI (implants don't count), a correction from previous assumptions. Tested all 5 tiers for optimal timing at expected psi level(s).[/*]
+[*]Narrow overload windows (tier 5 at low PSI) are aimed at their middle, to account for possibly frame stutter.[/*]
+[*]Github extra: starterPsiPowers.bat binds G & J through Macro_g.cmd / Macro_j.cmd in the save folder, so psi_autocast_mfd can edit them seamlessly.[/*]
+[/list]
+V1.4
+[list]
+[*]Updated all .cmd file extensions to .txt file extensions, because that's a reserved extension in modern-day computing for dangerous scripts and executables. These are basic text scripts in Squirrel, and sandboxed inside the game, so .txt is sufficient.[/*]
+[*]Every file name is lower case: type names exactly so in user.bnd.[/*]
+[*]Your existing key bindings switch to the new .txt files on the first load, and use them from your next start. Delete the old .cmd files after that.[/*]
+[*]Other mods can act when a macro starts and ends: psi_autocast_mfd's worm skin swap uses this.[/*]
 [/list]
 
 [size=4][b]Source and license[/b][/size]

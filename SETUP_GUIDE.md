@@ -46,8 +46,8 @@ Key bindings live in `user.bnd`, in your Saved Games folder above. The game read
 
 ### With the MFD: nothing to do here
 
-- **First load:** if no key opens the MFD, it binds keypad * (or the next free key), and keypad + to psi_autocast's cancel if that's free, then tells you to restart the game once.
-- **Saving a macro on a free key** binds that key; restart once and it runs the macro.
+- **First load:** it binds keypad * to open the MFD (or the next free key, if no key opens it yet), keypad + to psi_autocast's cancel and K to the maintenance tool if those are free, and every other free key as a macro key. Then it tells you to restart the game once.
+- **After that restart,** a macro you save on any of those keys runs on the next keypress. Keys you free later in Options > Controls become macro keys from your next start.
 - **Saving on a key the game uses:** clear the key in Options > Controls first, then Save again and restart. The MFD never takes a key away from the game's own controls.
 - Before the MFD changes `user.bnd`, it backs it up as `user.bnd.mfd_backup`.
 
@@ -58,7 +58,7 @@ The rest of this section is for psi_autocast without the MFD, or if you'd rather
 Both are double-click `.bat` files. Each backs up `user.bnd` first, never changes a key you've already bound without asking, and lists what it bound. Run them from any folder. `starterPsiPowers.bat` is for psi_autocast on its own; `setupPsiMfd.bat` is for MFD users and includes the starter keys. If you add the MFD later, just run `setupPsiMfd.bat`: the MFD can edit the starter's G and J straight away, and the script also moves older starter bindings into those files.
 
 - **`starterPsiPowers.bat`** (psi_autocast's repo, `extras/`), for psi_autocast without the MFD: binds **G** to Projected Cryokinesis with automatic overload and **J** to Localized Pyrokinesis then your previous weapon, if those keys are free. Each key runs a one-line file in the save folder (`psi_macros\Macro_g.cmd`, `Macro_j.cmd`), so psi_autocast_mfd can replace it with a macro later.
-- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`), for MFD users: gives **G** and **J** the same two starter casts, as macros you can edit in the MFD (`Macro_g.cmd`, `Macro_j.cmd`); binds keypad * to open the MFD, keypad + to cancel a running macro, and a macro key on every plain key you haven't bound (letters, digits, F-keys, keypad and navigation keys, keypad numbers, arrows, and the punctuation keys `, . / ; ' [ ] \`). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. Last, it asks (y/n) whether the mouse wheel should scroll the MFD (see below); it asks only while the wheel still has the game's default bindings or none.
+- **`setupPsiMfd.bat`** (psi_autocast_mfd's repo, `extras/`), for MFD users: gives **G** and **J** the same two starter casts, as macros you can edit in the MFD (`Macro_g.cmd`, `Macro_j.cmd`); binds keypad * to open the MFD, keypad + to cancel a running macro, K to the maintenance tool, and a macro key on every plain key you haven't bound (letters, digits, F-keys, keypad and navigation keys, keypad numbers, arrows, and the punctuation keys `, . / ; ' [ ] \`). Then it asks, one key at a time (y/n), about keys you've bound that the game doesn't bind by default and whose command is also on another key; saying yes never leaves a command without a key. Last, it asks (y/n) whether the mouse wheel should scroll the MFD (see below); it asks only while the wheel still has the game's default bindings or none.
 
 ### By hand
 
@@ -68,12 +68,14 @@ Open `user.bnd` in Notepad, back it up, and add lines like these:
 bind g "run psi\t1_projected_cryokinesis_quickfire.txt"
 bind keypad_plus "run psi\actions\cancel_macro.txt"
 bind keypad_star "summon_obj PsiMfd"
+bind k "summon_obj PsiMfdMaintainWeapon"
 bind keypad_minus "run user:/psi_macros\Macro_keypad_minus.cmd"
 ```
 
 - **A discipline key** runs one of the scripts in the game's `psi` folder (the psi_autocast readme lists them all).
 - **The cancel key** stops any running macro.
 - **The MFD key** opens and closes the MFD.
+- **The maintenance key** uses a maintenance tool on the weapon in hand (needs the MFD).
 - **A macro key** runs a macro the MFD saves for it. Change the key and the file name together.
 
 Optional: the mouse wheel scrolls the MFD table when the mouse is over the open MFD, and switches weapons everywhere else. Replace the two `mouse_wheel` lines with:
@@ -90,6 +92,8 @@ In a save without psi_autocast_mfd enabled, the wheel then doesn't switch weapon
 - **psi_autocast:** press a discipline key. The psi amp comes out and the discipline casts; conditional-overload keys overload when the discipline benefits.
 - **The Macro Builder:** open `psi\Macro_Builder.html` in your browser to build chains outside the game.
 - **The MFD:** press keypad * (after the one restart it asks for). Pick a key with the arrows or from **Keys**, click disciplines to add casts, **Save**, close it, and press the key. Leaving cursor mode (Tab) also closes it; unsaved edits are dropped.
+- **Worm skin swap:** tick **Worm skin swap** in the MFD if you want every macro to wear the worm skin while it runs. Your own armor goes back on afterwards.
+- **K:** uses a maintenance tool on the weapon in your hand.
 - **The console** shows a line for every cast and macro step, which helps when something doesn't happen.
 
 ## Troubleshooting

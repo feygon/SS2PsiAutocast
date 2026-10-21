@@ -103,8 +103,8 @@ class PsiPreviousWeapon extends SqRootScript {
 // Lets another script act around every psi macro: a global function PsiMacroStarted(obj) is called when a cast
 // presses fire or a chain starts its first step, and PsiMacroEnded(obj) however it ends (released, done,
 // cancelled or stopped). obj is the cast's or chain's object; a chain's own casts call them too. Nothing happens
-// when neither is defined, and a hook's error is printed without stopping the macro. psi_autocast_mfd's dev tools
-// use them to wear the worm skin while macros run.
+// when neither is defined, and a hook's error is printed without stopping the macro. psi_autocast_mfd uses them
+// for its worm skin swap option.
 function PsiMacroHook(name, obj) {
 	local root = getroottable();
 	if (!(name in root))

@@ -1,5 +1,12 @@
 Changelog for Nexus (Mod page > Logs, one entry per version). Plain text: one change per line.
 
+1.4
+Key files are .txt instead of .cmd: Windows runs a .cmd when it's double-clicked, and these are plain text the game reads. The game's run command doesn't care about the extension.
+Every file name is lower case. Type names exactly so in user.bnd: a key binding only finds a .txt file whose name matches with the same capitals.
+Your key bindings, and the psi_macros files they run, switch to the .txt files on the first load and use them from your next start. Delete the old .cmd files after that.
+Only psi_autocast's own files change: other mods' files and your own chains are left as they are.
+Other scripts can act when a macro starts and ends (psi_autocast_mfd's worm skin swap uses this).
+
 1.3
 Overload timing fixed for every tier: the overload window follows your base PSI (implants don't count), one step lower in the game's table than earlier versions assumed. Measured in game at all five tiers.
 Tier 3-5 overloads that released too early now land, and so do tier 1-2 overloads for players with a PSI implant.
