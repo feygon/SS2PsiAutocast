@@ -50,6 +50,14 @@ py build.py --install  also copy psi/*.cmd to <game>\psi\, and replace the .kpf 
 4. **Timer `PsiSelect`:** selects the discipline with `ShockGame.SetSelectedPsiPower(id)`, or `quickuse N` when `psi_power` is 0. Then it presses fire with `fire_weapon 1`.
 5. **Timer `PsiRelease`:** releases fire with `fire_weapon 0`, which casts, then calls `Object.Destroy(self)`.
 
+**Macro hooks (2026-10-21):** other scripts can act around every macro by defining global functions `PsiMacroStarted(obj)` and `PsiMacroEnded(obj)`.
+- **Start:** a cast calls `PsiMacroStarted` at `PsiSelect`, just before it presses fire; a chain calls it at its first step.
+- **End:** `PsiMacroEnded` is called however the macro ends: released, done, cancelled, or stopped on an error.
+- **Nesting:** a chain's own casts call both hooks too.
+- **Safety:** `PsiMacroHook` does nothing when a hook isn't defined, and prints a hook's error without stopping the macro.
+- **Timing:** `fire_weapon 0` is only queued when `PsiMacroEnded` runs, so a hook shouldn't undo anything the cast needs until a moment later.
+- **Who uses them:** psi_autocast_mfd's dev armor tool, to wear the worm skin while macros run.
+
 ## Generating key files
 
 - **`py make_keys.py`** writes `psi\lib\` (the parts), two scripts per discipline in `psi\`, and the discipline tables in README.md and MACROS_FOR_CLAUDE.md (between the `disciplines:start/end` markers).

@@ -100,6 +100,23 @@ class PsiPreviousWeapon extends SqRootScript {
 	}
 }
 
+// Lets another script act around every psi macro: a global function PsiMacroStarted(obj) is called when a cast
+// presses fire or a chain starts its first step, and PsiMacroEnded(obj) however it ends (released, done,
+// cancelled or stopped). obj is the cast's or chain's object; a chain's own casts call them too. Nothing happens
+// when neither is defined, and a hook's error is printed without stopping the macro. psi_autocast_mfd's dev tools
+// use them to wear the worm skin while macros run.
+function PsiMacroHook(name, obj) {
+	local root = getroottable();
+	if (!(name in root))
+		return;
+	try {
+		root[name](obj);
+	}
+	catch (e) {
+		print("[psi_autocast] " + name + " hook: " + e);
+	}
+}
+
 class PsiCast extends SqRootScript {
 	function CfgInt(name, fallback) {
 		if (!Engine.ConfigIsDefined(name))
@@ -216,10 +233,12 @@ class PsiCast extends SqRootScript {
 		// Cancelled (PsiCancel): don't press, or stop waiting to release. PsiCancel already let go of fire.
 		if (ND.psiCancelCount != GetData("CancelAt")) {
 			Say("cancelled");
+			PsiMacroHook("PsiMacroEnded", self);
 			Object.Destroy(self);
 			return;
 		}
 		if (name == "PsiSelect") {
+			PsiMacroHook("PsiMacroStarted", self);
 			local power = GetData("Power");
 			if (power > 0)
 				ShockGame.SetSelectedPsiPower(power);
@@ -232,6 +251,7 @@ class PsiCast extends SqRootScript {
 			Debug.Command("fire_weapon 0");
 			Say("released");
 			ND.psiCastsReleased++;
+			PsiMacroHook("PsiMacroEnded", self);
 			Object.Destroy(self);
 		}
 	}
@@ -401,6 +421,7 @@ class PsiChain extends SqRootScript {
 
 	function Stop(reason) {
 		Say(reason + ", stopping");
+		PsiMacroHook("PsiMacroEnded", self);
 		Object.Destroy(self);
 	}
 
@@ -500,6 +521,8 @@ class PsiChain extends SqRootScript {
 		if (ND.psiCancelCount != GetData("CancelAt"))
 			return Stop("cancelled at step " + (GetData("Index") + 1) + "/" + GetData("Count"));
 		if (name == "ChainStart" || name == "ChainRetry") {
+			if (name == "ChainStart")
+				PsiMacroHook("PsiMacroStarted", self);
 			StartStep();
 		}
 		else if (name == "ChainPoll") {
@@ -520,6 +543,7 @@ class PsiChain extends SqRootScript {
 			local next = GetData("Index") + 1;
 			if (next >= GetData("Count")) {
 				Say("done");
+				PsiMacroHook("PsiMacroEnded", self);
 				Object.Destroy(self);
 				return;
 			}

@@ -147,6 +147,47 @@ def test_shipped_code_unchanged_since_the_release_tag():
     assert not changed, "non-comment changes since the tag: " + " | ".join(changed)
 
 
+def macro_class(name):
+    code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")
+    return code.split(f"class {name} extends SqRootScript")[1].split("\nclass ")[0]
+
+
+def test_casts_and_chains_call_the_start_hook_once():
+    """
+    WHY: Other scripts act around every psi macro through the PsiMacroStarted / PsiMacroEnded hooks (the MFD's
+    dev build puts the worm skin on while one runs). A cast starts when it presses fire; a chain at its first step.
+    """
+    cast, chain = macro_class("PsiCast"), macro_class("PsiChain")
+    assert cast.count('PsiMacroHook("PsiMacroStarted", self)') == 1
+    assert re.search(r'if \(name == "PsiSelect"\) \{\s*PsiMacroHook\("PsiMacroStarted", self\);', cast)
+    assert chain.count('PsiMacroHook("PsiMacroStarted", self)') == 1
+    assert re.search(r'if \(name == "ChainStart"\)\s*PsiMacroHook\("PsiMacroStarted", self\);', chain)
+
+
+def test_every_way_a_cast_or_chain_ends_calls_the_end_hook():
+    """
+    WHY: A cast or chain that ends (released, done, cancelled, stopped on an error) without PsiMacroEnded leaves
+    the other script waiting forever: the armor worn before would never go back on.
+    """
+    for name in ("PsiCast", "PsiChain"):
+        function, previous = None, ""
+        for line in macro_class(name).splitlines():
+            m = re.match(r"\s*function (\w+)\(", line)
+            if m:
+                function = m.group(1)
+            if "Object.Destroy(self)" in line and function != "OnBeginScript":
+                assert 'PsiMacroHook("PsiMacroEnded", self);' in previous, f"{name}.{function}: {line.strip()}"
+            if line.strip():
+                previous = line
+
+
+def test_a_missing_or_failing_hook_never_stops_a_macro():
+    """WHY: Without the MFD's dev build no hook exists, and a hook's error must not break casting."""
+    code = (REPO / "mod/sq_scripts/psi_autocast.nut").read_text(encoding="utf-8")
+    hook = code.split("function PsiMacroHook(name, obj)")[1].split("\n}")[0]
+    assert "in root" in hook and "getroottable()" in hook and "try" in hook and "catch" in hook
+
+
 # ---- starterPsiPowers.bat ------------------------------------------------------------------------------
 
 BAT = REPO / "extras" / "starterPsiPowers.bat"
